@@ -1,0 +1,48 @@
+{
+  "$jsonSchema": {
+    "title": "area",
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "restaurant_id",
+      "name",
+      "status",
+      "create_time",
+      "update_time"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "restaurant_id": {
+        "bsonType": "objectId"
+      },
+      "name": {
+        "bsonType": "string"
+      },
+      "tea": {
+        "bsonType": "object",
+        "properties": {
+          "fee": {
+            "bsonType": "number"
+          },
+          "service": {
+            "bsonType": "number"
+          },
+          "tax": {
+            "bsonType": "number"
+          }
+        }
+      },
+      "status": {
+        "bsonType": "bool"
+      },
+      "create_time": {
+        "bsonType": "date"
+      },
+      "update_time": {
+        "bsonType": "date"
+      }
+    }
+  }
+}
