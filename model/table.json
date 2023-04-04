@@ -1,0 +1,56 @@
+{
+  "$jsonSchema": {
+    "title": "tables",
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "restaurant_id",
+      "area_id",
+      "sn",
+      "seats",
+      "runtime",
+      "create_time",
+      "update_time"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "restaurant_id": {
+        "bsonType": "objectId"
+      },
+      "area_id": {
+        "bsonType": "objectId"
+      },
+      "sn": {
+        "bsonType": "string"
+      },
+      "alias": {
+        "bsonType": "string"
+      },
+      "seats": {
+        "bsonType": "number"
+      },
+      "minimum_spending": {
+        "bsonType": "number"
+      },
+      "runtime": {
+        "bsonType": "number",
+        "enum": [
+          -2,
+          -1,
+          1,
+          2,
+          3
+        ],
+        "description": "-2：停用 -1：空闲 1：就餐 2：不清台 3：预结账"
+      },
+      "create_time": {
+        "bsonType": "date"
+      },
+      "update_time": {
+        "bsonType": "date"
+      }
+    }
+  }
+}

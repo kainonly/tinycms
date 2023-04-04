@@ -1,0 +1,73 @@
+{
+  "$jsonSchema": {
+    "title": "restaurant",
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "name",
+      "code",
+      "tel",
+      "status",
+      "create_time",
+      "update_time"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "name": {
+        "bsonType": "string"
+      },
+      "code": {
+        "bsonType": "string"
+      },
+      "tel": {
+        "bsonType": "string"
+      },
+      "location": {
+        "bsonType": "string"
+      },
+      "description": {
+        "bsonType": "string"
+      },
+      "logo": {
+        "bsonType": "string"
+      },
+      "pictures": {
+        "bsonType": "array",
+        "items": {
+          "bsonType": "string"
+        }
+      },
+      "flavors": {
+        "bsonType": "array",
+        "items": {
+          "bsonType": "objectId"
+        }
+      },
+      "enabled": {
+        "bsonType": "object",
+        "properties": {
+          "minimum_spending": {
+            "bsonType": "bool"
+          },
+          "mini_wechatpay": {
+            "bsonType": "bool"
+          },
+          "tea": {
+            "bsonType": "bool"
+          }
+        }
+      },
+      "status": {
+        "bsonType": "bool"
+      },
+      "create_time": {
+        "bsonType": "date"
+      },
+      "update_time": {
+        "bsonType": "date"
+      }
+    }
+  }
+}
