@@ -1,0 +1,40 @@
+{
+  "$jsonSchema": {
+    "title": "video",
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "restaurant_id",
+      "name",
+      "url",
+      "create_time",
+      "update_time"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "restaurant_id": {
+        "bsonType": "objectId"
+      },
+      "name": {
+        "bsonType": "string"
+      },
+      "url": {
+        "bsonType": "string"
+      },
+      "tags": {
+        "bsonType": "array",
+        "items": {
+          "bsonType": "objectId"
+        }
+      },
+      "create_time": {
+        "bsonType": "date"
+      },
+      "update_time": {
+        "bsonType": "date"
+      }
+    }
+  }
+}
