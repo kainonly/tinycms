@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/weplanx/openapi v0.3.0
-	github.com/weplanx/transfer v1.8.0
+	github.com/weplanx/transfer v1.8.1
 	github.com/weplanx/utils v0.1.2
 	go.mongodb.org/mongo-driver v1.11.0
 )
