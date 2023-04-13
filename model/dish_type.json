@@ -1,0 +1,67 @@
+{
+  "$jsonSchema": {
+    "title": "dish_type",
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "restaurant_id",
+      "sn",
+      "name",
+      "period",
+      "create_time",
+      "update_time"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "restaurant_id": {
+        "bsonType": "objectId"
+      },
+      "sn": {
+        "bsonType": "string"
+      },
+      "name": {
+        "bsonType": "string"
+      },
+      "period": {
+        "bsonType": "object",
+        "required": [
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "bsonType": "bool"
+          },
+          "rules": {
+            "bsonType": "array",
+            "items": {
+              "bsonType": "object",
+              "required": [
+                "name",
+                "value"
+              ],
+              "properties": {
+                "name": {
+                  "bsonType": "string"
+                },
+                "value": {
+                  "bsonType": "array",
+                  "items": {
+                    "bsonType": "date"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "create_time": {
+        "bsonType": "date"
+      },
+      "update_time": {
+        "bsonType": "date"
+      }
+    }
+  }
+}
