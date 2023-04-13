@@ -34,10 +34,10 @@ func TestCreateRestaurantsCollection(t *testing.T) {
 	}
 
 	index := mongo.IndexModel{
-		Keys: bson.D{{"code", 1}},
+		Keys: bson.D{{"sn", 1}},
 		Options: options.Index().
 			SetUnique(true).
-			SetName("idx_code"),
+			SetName("idx_sn"),
 	}
 	r, err := db.Collection("restaurants").Indexes().CreateOne(ctx, index)
 	assert.NoError(t, err)
