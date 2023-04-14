@@ -1,0 +1,120 @@
+{
+  "$jsonSchema": {
+    "title": "member",
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "level_id",
+      "cardno",
+      "profile",
+      "wechat",
+      "level",
+      "points",
+      "balance",
+      "income",
+      "spending",
+      "source",
+      "status",
+      "create_time",
+      "update_time"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "level_id": {
+        "bsonType": "objectId"
+      },
+      "cardno": {
+        "bsonType": "string"
+      },
+      "phone": {
+        "bsonType": "string"
+      },
+      "password": {
+        "bsonType": "string"
+      },
+      "profile": {
+        "bsonType": "object",
+        "required": [
+          "nickname"
+        ],
+        "properties": {
+          "nickname": {
+            "bsonType": "string"
+          },
+          "name": {
+            "bsonType": "string"
+          },
+          "gender": {
+            "bsonType": "number"
+          },
+          "avatar": {
+            "bsonType": "string"
+          },
+          "tel": {
+            "bsonType": "string"
+          },
+          "birthday": {
+            "bsonType": "date"
+          }
+        }
+      },
+      "location": {
+        "bsonType": "object",
+        "properties": {
+          "country": {
+            "bsonType": "string"
+          },
+          "province": {
+            "bsonType": "string"
+          },
+          "city": {
+            "bsonType": "string"
+          }
+        }
+      },
+      "wechat": {
+        "bsonType": "object",
+        "required": [
+          "openid"
+        ],
+        "properties": {
+          "openid": {
+            "bsonType": "string"
+          },
+          "unionid": {
+            "bsonType": "string"
+          },
+          "recommender": {
+            "bsonType": "string"
+          }
+        }
+      },
+      "points": {
+        "bsonType": "number"
+      },
+      "balance": {
+        "bsonType": "number"
+      },
+      "income": {
+        "bsonType": "number"
+      },
+      "spending": {
+        "bsonType": "number"
+      },
+      "source": {
+        "bsonType": "string"
+      },
+      "status": {
+        "bsonType": "bool"
+      },
+      "create_time": {
+        "bsonType": "date"
+      },
+      "update_time": {
+        "bsonType": "date"
+      }
+    }
+  }
+}
