@@ -1,0 +1,77 @@
+{
+  "$jsonSchema": {
+    "title": "member_level",
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "name",
+      "code",
+      "discount",
+      "upgrade",
+      "benefits",
+      "status",
+      "create_time",
+      "update_time"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "name": {
+        "bsonType": "string"
+      },
+      "code": {
+        "bsonType": "string"
+      },
+      "discount": {
+        "bsonType": "object",
+        "required": [
+          "room",
+          "dining",
+          "other"
+        ],
+        "properties": {
+          "room": {
+            "bsonType": "number"
+          },
+          "dining": {
+            "bsonType": "number"
+          },
+          "other": {
+            "bsonType": "number"
+          }
+        }
+      },
+      "upgrade": {
+        "bsonType": "object",
+        "required": [
+          "mode",
+          "amount"
+        ],
+        "properties": {
+          "mode": {
+            "bsonType": "number"
+          },
+          "amount": {
+            "bsonType": "number"
+          }
+        }
+      },
+      "benefits": {
+        "bsonType": "array",
+        "items": {
+          "bsonType": "objectId"
+        }
+      },
+      "status": {
+        "bsonType": "bool"
+      },
+      "create_time": {
+        "bsonType": "date"
+      },
+      "update_time": {
+        "bsonType": "date"
+      }
+    }
+  }
+}

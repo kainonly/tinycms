@@ -36,6 +36,8 @@ type Dish struct {
 	Sales           int64                `bson:"sales" json:"sales"`
 	Status          bool                 `bson:"status" json:"status"`
 	Sort            int64                `bson:"sort" json:"sort"`
+	CreateTime      time.Time            `bson:"create_time" json:"create_time"`
+	UpdateTime      time.Time            `bson:"update_time" json:"update_time"`
 }
 
 type DishDine struct {
