@@ -47,6 +47,8 @@
                 },
                 "value": {
                   "bsonType": "array",
+                  "maxItems": 2,
+                  "minItems": 2,
                   "items": {
                     "bsonType": "date"
                   }
@@ -62,6 +64,7 @@
       "update_time": {
         "bsonType": "date"
       }
-    }
+    },
+    "additionalProperties": false
   }
 }
