@@ -85,6 +85,7 @@
       "update_time": {
         "bsonType": "date"
       }
-    }
+    },
+    "additionalProperties": false
   }
 }
