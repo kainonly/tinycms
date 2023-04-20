@@ -6,14 +6,14 @@ import (
 )
 
 type DishType struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
-	RestaurantId primitive.ObjectID `bson:"restaurant_id" json:"restaurant_id"`
-	Sn           string             `bson:"sn" json:"sn"`
-	Name         string             `bson:"name" json:"name"`
-	Period       DishTypePeriod     `bson:"period" json:"period"`
-	Status       bool               `bson:"status" json:"status"`
-	CreateTime   time.Time          `bson:"create_time" json:"create_time"`
-	UpdateTime   time.Time          `bson:"update_time" json:"update_time"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
+	ShopId     primitive.ObjectID `bson:"shop_id" json:"shop_id"`
+	Sn         string             `bson:"sn" json:"sn"`
+	Name       string             `bson:"name" json:"name"`
+	Period     DishTypePeriod     `bson:"period" json:"period"`
+	Status     bool               `bson:"status" json:"status"`
+	CreateTime time.Time          `bson:"create_time" json:"create_time"`
+	UpdateTime time.Time          `bson:"update_time" json:"update_time"`
 }
 
 type DishTypePeriod struct {

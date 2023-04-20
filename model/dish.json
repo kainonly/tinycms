@@ -4,7 +4,7 @@
     "bsonType": "object",
     "required": [
       "_id",
-      "restaurant_id",
+      "shop_id",
       "sn",
       "name",
       "pinyin",
@@ -28,7 +28,7 @@
       "_id": {
         "bsonType": "objectId"
       },
-      "restaurant_id": {
+      "shop_id": {
         "bsonType": "objectId"
       },
       "sn": {

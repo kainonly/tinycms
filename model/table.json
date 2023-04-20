@@ -4,7 +4,7 @@
     "bsonType": "object",
     "required": [
       "_id",
-      "restaurant_id",
+      "shop_id",
       "area_id",
       "sn",
       "seats",
@@ -19,7 +19,7 @@
       "restaurant_id": {
         "bsonType": "objectId"
       },
-      "area_id": {
+      "shop_id": {
         "bsonType": "objectId"
       },
       "sn": {

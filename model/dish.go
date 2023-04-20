@@ -7,7 +7,7 @@ import (
 
 type Dish struct {
 	ID              primitive.ObjectID   `bson:"_id,omitempty" json:"_id"`
-	RestaurantId    primitive.ObjectID   `bson:"restaurant_id" json:"restaurant_id"`
+	ShopId          primitive.ObjectID   `bson:"shop_id" json:"shop_id"`
 	Sn              string               `bson:"sn" json:"sn"`
 	Name            string               `bson:"name" json:"name"`
 	Pinyin          string               `bson:"pinyin" json:"pinyin"`

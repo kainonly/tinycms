@@ -1,12 +1,13 @@
 {
   "$jsonSchema": {
-    "title": "restaurant",
+    "title": "shop",
     "bsonType": "object",
     "required": [
       "_id",
       "name",
-      "sn",
+      "principal",
       "tel",
+      "minimum",
       "status",
       "create_time",
       "update_time"
@@ -18,19 +19,22 @@
       "name": {
         "bsonType": "string"
       },
+      "logo": {
+        "bsonType": "string"
+      },
       "sn": {
+        "bsonType": "string"
+      },
+      "principal": {
         "bsonType": "string"
       },
       "tel": {
         "bsonType": "string"
       },
-      "location": {
+      "address": {
         "bsonType": "string"
       },
-      "description": {
-        "bsonType": "string"
-      },
-      "logo": {
+      "bulletin": {
         "bsonType": "string"
       },
       "pictures": {
@@ -39,23 +43,18 @@
           "bsonType": "string"
         }
       },
-      "flavors": {
-        "bsonType": "array",
-        "items": {
-          "bsonType": "objectId"
-        }
-      },
-      "enabled": {
+      "minimum": {
         "bsonType": "object",
+        "required": [
+          "spending",
+          "delivery"
+        ],
         "properties": {
-          "minimum_spending": {
-            "bsonType": "bool"
+          "spending": {
+            "bsonType": "number"
           },
-          "mini_wechatpay": {
-            "bsonType": "bool"
-          },
-          "tea": {
-            "bsonType": "bool"
+          "delivery": {
+            "bsonType": "number"
           }
         }
       },

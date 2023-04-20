@@ -4,7 +4,7 @@
     "bsonType": "object",
     "required": [
       "_id",
-      "restaurant_id",
+      "shop_id",
       "name",
       "url",
       "create_time",
@@ -14,7 +14,7 @@
       "_id": {
         "bsonType": "objectId"
       },
-      "restaurant_id": {
+      "shop_id": {
         "bsonType": "objectId"
       },
       "name": {
