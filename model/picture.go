@@ -6,15 +6,15 @@ import (
 )
 
 type Picture struct {
-	ID           primitive.ObjectID   `bson:"_id,omitempty" json:"_id"`
-	RestaurantId primitive.ObjectID   `bson:"restaurant_id" json:"restaurant_id"`
-	Name         string               `bson:"name" json:"name"`
-	Url          string               `bson:"url" json:"url"`
-	Query        string               `bson:"query" json:"query"`
-	Process      PictureProcess       `bson:"process" json:"process"`
-	Tags         []primitive.ObjectID `bson:"tags" json:"tags"`
-	CreateTime   time.Time            `bson:"create_time" json:"create_time"`
-	UpdateTime   time.Time            `bson:"update_time" json:"update_time"`
+	ID         primitive.ObjectID   `bson:"_id,omitempty" json:"_id"`
+	ShopId     primitive.ObjectID   `bson:"shop_id" json:"shop_id"`
+	Name       string               `bson:"name" json:"name"`
+	Url        string               `bson:"url" json:"url"`
+	Query      string               `bson:"query" json:"query"`
+	Process    PictureProcess       `bson:"process" json:"process"`
+	Tags       []primitive.ObjectID `bson:"tags" json:"tags"`
+	CreateTime time.Time            `bson:"create_time" json:"create_time"`
+	UpdateTime time.Time            `bson:"update_time" json:"update_time"`
 }
 
 type PictureProcess struct {
@@ -36,9 +36,9 @@ type PictureProcessZoom struct {
 }
 
 type PictureTag struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
-	RestaurantId primitive.ObjectID `bson:"restaurant_id" json:"restaurant_id"`
-	Name         string             `bson:"name" json:"name"`
-	CreateTime   time.Time          `bson:"create_time" json:"create_time"`
-	UpdateTime   time.Time          `bson:"update_time" json:"update_time"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
+	ShopId     primitive.ObjectID `bson:"shop_id" json:"shop_id"`
+	Name       string             `bson:"name" json:"name"`
+	CreateTime time.Time          `bson:"create_time" json:"create_time"`
+	UpdateTime time.Time          `bson:"update_time" json:"update_time"`
 }
