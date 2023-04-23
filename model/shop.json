@@ -5,9 +5,6 @@
     "required": [
       "_id",
       "name",
-      "principal",
-      "tel",
-      "minimum",
       "status",
       "create_time",
       "update_time"

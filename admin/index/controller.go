@@ -258,13 +258,6 @@ func (x *Controller) Options(ctx context.Context, c *app.RequestContext) {
 			})
 			return
 		}
-	case "collaboration":
-		c.JSON(http.StatusOK, utils.H{
-			"url":      "https://open.feishu.cn/open-apis/authen/v1/index",
-			"redirect": x.Values.RedirectUrl,
-			"app_id":   x.Values.FeishuAppId,
-		})
-		return
 	}
 	return
 }

@@ -16,10 +16,10 @@
       "_id": {
         "bsonType": "objectId"
       },
-      "restaurant_id": {
+      "shop_id": {
         "bsonType": "objectId"
       },
-      "shop_id": {
+      "area_id": {
         "bsonType": "objectId"
       },
       "sn": {
