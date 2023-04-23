@@ -222,6 +222,8 @@ func (x *Service) GetUser(ctx context.Context, userId string) (data utils.H, err
 		"email":       user.Email,
 		"name":        user.Name,
 		"avatar":      user.Avatar,
+		"sessions":    user.Sessions,
+		"history":     user.History,
 		"status":      user.Status,
 		"create_time": user.CreateTime,
 		"update_time": user.UpdateTime,
