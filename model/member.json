@@ -7,11 +7,8 @@
       "level_id",
       "cardno",
       "profile",
-      "wechat",
-      "level",
       "points",
       "balance",
-      "income",
       "spending",
       "source",
       "status",
@@ -28,22 +25,17 @@
       "cardno": {
         "bsonType": "string"
       },
-      "phone": {
-        "bsonType": "string"
-      },
-      "password": {
-        "bsonType": "string"
-      },
       "profile": {
         "bsonType": "object",
         "required": [
-          "nickname"
+          "name",
+          "phone"
         ],
         "properties": {
-          "nickname": {
+          "name": {
             "bsonType": "string"
           },
-          "name": {
+          "phone": {
             "bsonType": "string"
           },
           "gender": {
@@ -52,13 +44,19 @@
           "avatar": {
             "bsonType": "string"
           },
-          "tel": {
-            "bsonType": "string"
-          },
           "birthday": {
             "bsonType": "date"
           }
         }
+      },
+      "points": {
+        "bsonType": "number"
+      },
+      "balance": {
+        "bsonType": "number"
+      },
+      "spending": {
+        "bsonType": "number"
       },
       "location": {
         "bsonType": "object",
@@ -73,35 +71,6 @@
             "bsonType": "string"
           }
         }
-      },
-      "wechat": {
-        "bsonType": "object",
-        "required": [
-          "openid"
-        ],
-        "properties": {
-          "openid": {
-            "bsonType": "string"
-          },
-          "unionid": {
-            "bsonType": "string"
-          },
-          "recommender": {
-            "bsonType": "string"
-          }
-        }
-      },
-      "points": {
-        "bsonType": "number"
-      },
-      "balance": {
-        "bsonType": "number"
-      },
-      "income": {
-        "bsonType": "number"
-      },
-      "spending": {
-        "bsonType": "number"
       },
       "source": {
         "bsonType": "string"
