@@ -5,10 +5,8 @@
     "required": [
       "_id",
       "name",
-      "code",
+      "points",
       "discount",
-      "upgrade",
-      "benefits",
       "status",
       "create_time",
       "update_time"
@@ -20,48 +18,23 @@
       "name": {
         "bsonType": "string"
       },
-      "code": {
-        "bsonType": "string"
+      "points": {
+        "bsonType": "object",
+        "required": [
+          "initial",
+          "upgrade"
+        ],
+        "properties": {
+          "initial": {
+            "bsonType": "number"
+          },
+          "upgrade": {
+            "bsonType": "number"
+          }
+        }
       },
       "discount": {
-        "bsonType": "object",
-        "required": [
-          "room",
-          "dining",
-          "other"
-        ],
-        "properties": {
-          "room": {
-            "bsonType": "number"
-          },
-          "dining": {
-            "bsonType": "number"
-          },
-          "other": {
-            "bsonType": "number"
-          }
-        }
-      },
-      "upgrade": {
-        "bsonType": "object",
-        "required": [
-          "mode",
-          "amount"
-        ],
-        "properties": {
-          "mode": {
-            "bsonType": "number"
-          },
-          "amount": {
-            "bsonType": "number"
-          }
-        }
-      },
-      "benefits": {
-        "bsonType": "array",
-        "items": {
-          "bsonType": "objectId"
-        }
+        "bsonType": "number"
       },
       "status": {
         "bsonType": "bool"

@@ -33,30 +33,6 @@ func TestCreateMembersCollection(t *testing.T) {
 	}
 }
 
-func TestCreateMemberBenefitsCollection(t *testing.T) {
-	ctx := context.TODO()
-	b, err := os.ReadFile("./member_benefit.json")
-	assert.NoError(t, err)
-	var jsonSchema bson.D
-	err = bson.UnmarshalExtJSON(b, true, &jsonSchema)
-	assert.NoError(t, err)
-
-	n, err := db.ListCollectionNames(ctx, bson.M{"name": "member_benefits"})
-	assert.NoError(t, err)
-	if len(n) == 0 {
-		option := options.CreateCollection().SetValidator(jsonSchema)
-		err = db.CreateCollection(ctx, "member_benefits", option)
-		assert.NoError(t, err)
-	} else {
-		err = db.RunCommand(ctx, bson.D{
-			{"collMod", "member_benefits"},
-			{"validator", jsonSchema},
-			{"validationLevel", "strict"},
-		}).Err()
-		assert.NoError(t, err)
-	}
-}
-
 func TestCreateMemberLevelsCollection(t *testing.T) {
 	ctx := context.TODO()
 	b, err := os.ReadFile("./member_level.json")
