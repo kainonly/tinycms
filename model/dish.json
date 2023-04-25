@@ -5,9 +5,10 @@
     "required": [
       "_id",
       "shop_id",
-      "sn",
+      "type_id",
       "name",
-      "pinyin",
+      "sn",
+      "code",
       "signature",
       "cold",
       "price",
@@ -31,32 +32,41 @@
       "shop_id": {
         "bsonType": "objectId"
       },
-      "sn": {
-        "bsonType": "string"
+      "type_id": {
+        "bsonType": "objectId"
       },
       "name": {
         "bsonType": "string"
       },
-      "pinyin": {
+      "sn": {
+        "bsonType": "string"
+      },
+      "code": {
         "bsonType": "string"
       },
       "signature": {
         "bsonType": "bool"
       },
-      "cold": {
+      "recommend": {
         "bsonType": "bool"
-      },
-      "tags": {
-        "bsonType": "array",
-        "items": {
-          "bsonType": "objectId"
-        }
       },
       "price": {
         "bsonType": "number"
       },
       "vip": {
-        "bsonType": "number"
+        "bsonType": "object",
+        "required": [
+          "enabled",
+          "price"
+        ],
+        "properties": {
+          "enabled": {
+            "bsonType": "bool"
+          },
+          "price": {
+            "bsonType": "number"
+          }
+        }
       },
       "weigh": {
         "bsonType": "bool"
@@ -79,10 +89,14 @@
       "dine": {
         "bsonType": "object",
         "required": [
+          "enabled",
           "service",
           "tax"
         ],
         "properties": {
+          "enabled": {
+            "bsonType": "bool"
+          },
           "service": {
             "bsonType": "number"
           },
@@ -94,38 +108,18 @@
       "takeout": {
         "bsonType": "object",
         "required": [
+          "enabled",
           "service",
           "tax"
         ],
         "properties": {
+          "enabled": {
+            "bsonType": "bool"
+          },
           "service": {
             "bsonType": "number"
           },
           "tax": {
-            "bsonType": "number"
-          }
-        }
-      },
-      "special": {
-        "bsonType": "object",
-        "required": [
-          "price",
-          "period"
-        ],
-        "properties": {
-          "price": {
-            "bsonType": "number"
-          },
-          "period": {
-            "bsonType": "array",
-            "items": {
-              "bsonType": "date"
-            }
-          },
-          "maximum_order": {
-            "bsonType": "number"
-          },
-          "maximum_daily": {
             "bsonType": "number"
           }
         }
@@ -180,9 +174,13 @@
       "preorder": {
         "bsonType": "object",
         "required": [
+          "enabled",
           "way"
         ],
         "properties": {
+          "enabled": {
+            "bsonType": "bool"
+          },
           "way": {
             "bsonType": "number",
             "enum": [
@@ -193,18 +191,6 @@
           "quantity": {
             "bsonType": "number"
           }
-        }
-      },
-      "methods": {
-        "bsonType": "array",
-        "items": {
-          "bsonType": "objectId"
-        }
-      },
-      "flavors": {
-        "bsonType": "array",
-        "items": {
-          "bsonType": "objectId"
         }
       },
       "logo": {
