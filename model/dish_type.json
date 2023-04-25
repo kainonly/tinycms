@@ -5,8 +5,9 @@
     "required": [
       "_id",
       "shop_id",
-      "sn",
       "name",
+      "sn",
+      "scopes",
       "period",
       "create_time",
       "update_time"
@@ -18,11 +19,17 @@
       "shop_id": {
         "bsonType": "objectId"
       },
+      "name": {
+        "bsonType": "string"
+      },
       "sn": {
         "bsonType": "string"
       },
-      "name": {
-        "bsonType": "string"
+      "scopes": {
+        "bsonType": "array",
+        "items": {
+          "bsonType": "number"
+        }
       },
       "period": {
         "bsonType": "object",
