@@ -36,6 +36,3 @@ jobs:
           goveralls -coverprofile=covprofile -service=github
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: PUSH FOSSAS
-        run: "curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash"
