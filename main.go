@@ -20,7 +20,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	h, err := api.Initialize(ctx)
+	h, err := api.Initialize(ctx, false)
 	if err != nil {
 		panic(err)
 	}

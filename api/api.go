@@ -131,11 +131,13 @@ func (x *API) ErrHandler() app.HandlerFunc {
 	}
 }
 
-func (x *API) Initialize(ctx context.Context) (h *server.Hertz, err error) {
+func (x *API) Initialize(ctx context.Context, testing bool) (h *server.Hertz, err error) {
 	h = x.Hertz
 	common.RegValidate()
 	h.Use(x.ErrHandler())
 
-	go x.Service.Sync(nil)
+	if !testing {
+		go x.Service.Sync(nil)
+	}
 	return
 }
