@@ -28,7 +28,7 @@ jobs:
           DATABASE_NAME: example
           DATABASE_REDIS: redis://127.0.0.1:6379
           NATS_HOSTS: nats://127.0.0.1:4222,nats://127.0.0.1:4223,nats://127.0.0.1:4224
-          NATS_TOKEN: s3cr3t
+          NATS_NKEY: SUABEKK3NUTWCP3VMA2KFEKEOVAZHEK6R5LNIL66EWSRJC5Q37UD77FXII
 
       - name: PUSH COVERALLS
         run: |
