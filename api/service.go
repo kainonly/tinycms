@@ -1,4 +1,4 @@
-package index
+package api
 
 import (
 	"context"
@@ -20,6 +20,40 @@ import (
 
 type Service struct {
 	*common.Inject
+}
+
+type M = map[string]interface{}
+
+func (x *Service) Fetch(v interface{}) (err error) {
+	var entry nats.KeyValueEntry
+	if entry, err = x.KeyValue.Get("rest"); err != nil {
+		return
+	}
+	if err = sonic.Unmarshal(entry.Value(), v); err != nil {
+		return
+	}
+	return
+}
+
+func (x *Service) Sync(ok chan interface{}) (err error) {
+	if err = x.Fetch(x.V.Options); err != nil {
+		return
+	}
+	current := time.Now()
+	var watch nats.KeyWatcher
+	watch, err = x.KeyValue.Watch("rest")
+	for entry := range watch.Updates() {
+		if entry == nil || entry.Created().Unix() < current.Unix() {
+			continue
+		}
+		if err = x.Fetch(x.V.Options); err != nil {
+			return
+		}
+		if ok != nil {
+			ok <- x.V.Options
+		}
+	}
+	return
 }
 
 func (x *Service) Create(ctx context.Context, name string, doc M) (r interface{}, err error) {
@@ -369,8 +403,8 @@ func (x *Service) Pipe(data M, keys []string, kind interface{}) (err error) {
 
 func (x *Service) Projection(name string, keys []string) (result bson.M) {
 	result = make(bson.M)
-	if x.V.Options != nil && x.V.Options[name] != nil {
-		for _, key := range x.V.Options[name].Keys {
+	if x.V.Options != nil && (*x.V.Options)[name] != nil {
+		for _, key := range (*x.V.Options)[name].Keys {
 			result[key] = 1
 		}
 	}
@@ -387,15 +421,23 @@ func (x *Service) Projection(name string, keys []string) (result bson.M) {
 	return
 }
 
+type PublishDto struct {
+	Action string      `json:"action"`
+	Id     string      `json:"id,omitempty"`
+	Filter M           `json:"filter,omitempty"`
+	Data   interface{} `json:"data,omitempty"`
+	Result interface{} `json:"result"`
+}
+
 func (x *Service) Publish(ctx context.Context, name string, dto PublishDto) (err error) {
-	if v, ok := x.V.Options[name]; ok {
+	if v, ok := (*x.V.Options)[name]; ok {
 		if !v.Event {
 			return
 		}
 
 		b, _ := sonic.Marshal(dto)
 		subject := fmt.Sprintf(`%s.events.%s`, x.V.Namespace, name)
-		if _, err = x.JS.Publish(subject, b, nats.Context(ctx)); err != nil {
+		if _, err = x.JetStream.Publish(subject, b, nats.Context(ctx)); err != nil {
 			return
 		}
 	}

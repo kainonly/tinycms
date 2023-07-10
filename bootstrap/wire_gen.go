@@ -8,7 +8,6 @@ package bootstrap
 
 import (
 	"github.com/weplanx/rest/api"
-	"github.com/weplanx/rest/api/index"
 	"github.com/weplanx/rest/common"
 )
 
@@ -37,28 +36,28 @@ func NewAPI(values *common.Values) (*api.API, error) {
 		return nil, err
 	}
 	inject := &common.Inject{
-		V:    values,
-		Mgo:  client,
-		Db:   database,
-		RDb:  redisClient,
-		Nats: conn,
-		JS:   jetStreamContext,
-		KV:   keyValue,
+		V:         values,
+		Mgo:       client,
+		Db:        database,
+		RDb:       redisClient,
+		JetStream: jetStreamContext,
+		KeyValue:  keyValue,
 	}
 	hertz, err := UseHertz(values)
 	if err != nil {
 		return nil, err
 	}
-	service := &index.Service{
+	service := &api.Service{
 		Inject: inject,
 	}
-	controller := &index.Controller{
-		IndexService: service,
+	controller := &api.Controller{
+		Service: service,
 	}
 	apiAPI := &api.API{
-		Inject: inject,
-		Hertz:  hertz,
-		Index:  controller,
+		Inject:     inject,
+		Hertz:      hertz,
+		Controller: controller,
+		Service:    service,
 	}
 	return apiAPI, nil
 }

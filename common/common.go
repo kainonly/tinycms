@@ -9,13 +9,12 @@ import (
 )
 
 type Inject struct {
-	V    *Values
-	Mgo  *mongo.Client
-	Db   *mongo.Database
-	RDb  *redis.Client
-	Nats *nats.Conn
-	JS   nats.JetStreamContext
-	KV   nats.KeyValue
+	V         *Values
+	Mgo       *mongo.Client
+	Db        *mongo.Database
+	RDb       *redis.Client
+	JetStream nats.JetStreamContext
+	KeyValue  nats.KeyValue
 }
 
 type Values struct {
@@ -24,7 +23,7 @@ type Values struct {
 	Key       string `env:"KEY,required"`
 	Database  `envPrefix:"DATABASE_"`
 	Nats      `envPrefix:"NATS_"`
-	Options   map[string]*RestOption
+	*Options
 }
 
 func (x Values) Name(v ...string) string {
@@ -41,6 +40,8 @@ type Nats struct {
 	Hosts []string `env:"HOSTS,required" envSeparator:","`
 	Nkey  string   `env:"NKEY,required"`
 }
+
+type Options = map[string]*RestOption
 
 type RestOption struct {
 	Event bool     `json:"event"`

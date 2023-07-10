@@ -11,43 +11,42 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/errors"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/google/wire"
-	"github.com/weplanx/rest/api/index"
 	"github.com/weplanx/rest/common"
 	"net/http"
 )
 
 var Provides = wire.NewSet(
-	index.Provides,
+	wire.Struct(new(Controller), "*"),
+	wire.Struct(new(Service), "*"),
 )
 
 type API struct {
 	*common.Inject
 
-	Hertz *server.Hertz
-	Index *index.Controller
+	Hertz      *server.Hertz
+	Controller *Controller
+	Service    *Service
 }
 
 func (x *API) Routes(h *server.Hertz) (err error) {
-
-	h.GET("", x.Index.Ping)
-	r := h.Group("db/:collection")
+	h.GET("", x.Controller.Ping)
+	r := h.Group(":collection")
 	{
-		r.POST("", x.Index.Create)
-		r.POST("bulk_create", x.Index.BulkCreate)
-		r.GET("_size", x.Index.Size)
-		r.GET("", x.Index.Find)
-		r.GET("_one", x.Index.FindOne)
-		r.GET(":id", x.Index.FindById)
-		r.PATCH("", x.Index.Update)
-		r.PATCH(":id", x.Index.UpdateById)
-		r.PUT(":id", x.Index.Replace)
-		r.DELETE(":id", x.Index.Delete)
-		r.POST("bulk_delete", x.Index.BulkDelete)
-		r.POST("sort", x.Index.Sort)
+		r.POST("", x.Controller.Create)
+		r.POST("bulk_create", x.Controller.BulkCreate)
+		r.GET("_size", x.Controller.Size)
+		r.GET("", x.Controller.Find)
+		r.GET("_one", x.Controller.FindOne)
+		r.GET(":id", x.Controller.FindById)
+		r.PATCH("", x.Controller.Update)
+		r.PATCH(":id", x.Controller.UpdateById)
+		r.PUT(":id", x.Controller.Replace)
+		r.DELETE(":id", x.Controller.Delete)
+		r.POST("bulk_delete", x.Controller.BulkDelete)
+		r.POST("sort", x.Controller.Sort)
 	}
-	h.POST("transaction", x.Index.Transaction)
-	h.POST("commit", x.Index.Commit)
-
+	h.POST("transaction", x.Controller.Transaction)
+	h.POST("commit", x.Controller.Commit)
 	return
 }
 
@@ -137,5 +136,6 @@ func (x *API) Initialize(ctx context.Context) (h *server.Hertz, err error) {
 	common.RegValidate()
 	h.Use(x.ErrHandler())
 
+	go x.Service.Sync(nil)
 	return
 }
