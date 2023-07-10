@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"github.com/weplanx/rest/bootstrap"
+	"github.com/weplanx/rest/common"
 	"time"
 )
 
 func main() {
 	values, err := bootstrap.LoadStaticValues()
+	values.Options = new(common.Options)
 	if err != nil {
 		panic(err)
 	}
