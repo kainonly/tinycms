@@ -1,4 +1,4 @@
-package mongoapi
+package index
 
 import (
 	"context"
@@ -6,9 +6,8 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/common/errors"
 	"github.com/nats-io/nats.go"
-	"github.com/redis/go-redis/v9"
-	"github.com/weplanx/utils/passlib"
-	"github.com/weplanx/utils/values"
+	"github.com/weplanx/go-wpx/passlib"
+	"github.com/weplanx/rest/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,29 +19,7 @@ import (
 )
 
 type Service struct {
-	Namespace     string
-	MongoClient   *mongo.Client
-	Db            *mongo.Database
-	Redis         *redis.Client
-	DynamicValues *values.DynamicValues
-	Js            nats.JetStreamContext
-}
-
-func (x *Service) Load(ctx context.Context) (err error) {
-	for k, v := range x.DynamicValues.Resources {
-		if v.Event {
-			name := fmt.Sprintf(`%s:events:%s`, x.Namespace, k)
-			subject := fmt.Sprintf(`%s.events.%s`, x.Namespace, k)
-			if _, err = x.Js.AddStream(&nats.StreamConfig{
-				Name:      name,
-				Subjects:  []string{subject},
-				Retention: nats.WorkQueuePolicy,
-			}, nats.Context(ctx)); err != nil {
-				return
-			}
-		}
-	}
-	return
+	*common.Inject
 }
 
 func (x *Service) Create(ctx context.Context, name string, doc M) (r interface{}, err error) {
@@ -211,11 +188,11 @@ func (x *Service) Sort(ctx context.Context, name string, key string, ids []primi
 }
 
 func (x *Service) Transaction(ctx context.Context, txn string) (err error) {
-	key := fmt.Sprintf(`%s:transaction:%s`, x.Namespace, txn)
-	if err = x.Redis.LPush(ctx, key, time.Now().Format(time.RFC3339)).Err(); err != nil {
+	key := fmt.Sprintf(`%s:transaction:%s`, x.V.Namespace, txn)
+	if err = x.RDb.LPush(ctx, key, time.Now().Format(time.RFC3339)).Err(); err != nil {
 		return
 	}
-	if err = x.Redis.Expire(ctx, key, time.Hour*5).Err(); err != nil {
+	if err = x.RDb.Expire(ctx, key, time.Hour*5).Err(); err != nil {
 		return
 	}
 	return
@@ -230,12 +207,12 @@ type PendingDto struct {
 }
 
 func (x *Service) Pending(ctx context.Context, txn string, dto PendingDto) (err error) {
-	key := fmt.Sprintf(`%s:transaction:%s`, x.Namespace, txn)
+	key := fmt.Sprintf(`%s:transaction:%s`, x.V.Namespace, txn)
 	var b []byte
 	if b, err = sonic.Marshal(dto); err != nil {
 		return
 	}
-	if err = x.Redis.LPush(ctx, key, b).Err(); err != nil {
+	if err = x.RDb.LPush(ctx, key, b).Err(); err != nil {
 		return
 	}
 	return
@@ -244,9 +221,9 @@ func (x *Service) Pending(ctx context.Context, txn string, dto PendingDto) (err 
 var ErrTxnTimeOut = errors.NewPublic("the transaction has timed out")
 
 func (x *Service) Commit(ctx context.Context, txn string) (_ interface{}, err error) {
-	key := fmt.Sprintf(`%s:transaction:%s`, x.Namespace, txn)
+	key := fmt.Sprintf(`%s:transaction:%s`, x.V.Namespace, txn)
 	var begin time.Time
-	if begin, err = x.Redis.RPop(ctx, key).Time(); err != nil {
+	if begin, err = x.RDb.RPop(ctx, key).Time(); err != nil {
 		return
 	}
 	if time.Since(begin) > time.Second*30 {
@@ -255,13 +232,13 @@ func (x *Service) Commit(ctx context.Context, txn string) (_ interface{}, err er
 	}
 
 	var n int64
-	if n, err = x.Redis.LLen(ctx, key).Result(); err != nil {
+	if n, err = x.RDb.LLen(ctx, key).Result(); err != nil {
 		return
 	}
 
 	opts := options.Session().SetDefaultReadConcern(readconcern.Majority())
 	var session mongo.Session
-	if session, err = x.MongoClient.StartSession(opts); err != nil {
+	if session, err = x.Mgo.StartSession(opts); err != nil {
 		return
 	}
 	defer session.EndSession(ctx)
@@ -271,7 +248,7 @@ func (x *Service) Commit(ctx context.Context, txn string) (_ interface{}, err er
 		var results []interface{}
 		for n > 0 {
 			var b []byte
-			if b, err = x.Redis.RPop(ctx, key).Bytes(); err != nil {
+			if b, err = x.RDb.RPop(ctx, key).Bytes(); err != nil {
 				return
 			}
 			var dto PendingDto
@@ -392,8 +369,8 @@ func (x *Service) Pipe(data M, keys []string, kind interface{}) (err error) {
 
 func (x *Service) Projection(name string, keys []string) (result bson.M) {
 	result = make(bson.M)
-	if x.DynamicValues.Resources != nil && x.DynamicValues.Resources[name] != nil {
-		for _, key := range x.DynamicValues.Resources[name].Keys {
+	if x.V.Options != nil && x.V.Options[name] != nil {
+		for _, key := range x.V.Options[name].Keys {
 			result[key] = 1
 		}
 	}
@@ -410,23 +387,15 @@ func (x *Service) Projection(name string, keys []string) (result bson.M) {
 	return
 }
 
-type PublishDto struct {
-	Action string      `json:"action"`
-	Id     string      `json:"id,omitempty"`
-	Filter M           `json:"filter,omitempty"`
-	Data   interface{} `json:"data,omitempty"`
-	Result interface{} `json:"result"`
-}
-
 func (x *Service) Publish(ctx context.Context, name string, dto PublishDto) (err error) {
-	if v, ok := x.DynamicValues.Resources[name]; ok {
+	if v, ok := x.V.Options[name]; ok {
 		if !v.Event {
 			return
 		}
 
 		b, _ := sonic.Marshal(dto)
-		subject := fmt.Sprintf(`%s.events.%s`, x.Namespace, name)
-		if _, err = x.Js.Publish(subject, b, nats.Context(ctx)); err != nil {
+		subject := fmt.Sprintf(`%s.events.%s`, x.V.Namespace, name)
+		if _, err = x.JS.Publish(subject, b, nats.Context(ctx)); err != nil {
 			return
 		}
 	}

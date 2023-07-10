@@ -1,4 +1,4 @@
-package mongoapi
+package index
 
 import (
 	"context"
@@ -16,7 +16,14 @@ import (
 )
 
 type Controller struct {
-	Service *Service
+	IndexService *Service
+}
+
+func (x *Controller) Ping(ctx context.Context, c *app.RequestContext) {
+	c.JSON(http.StatusOK, utils.H{
+		"ip":   c.ClientIP(),
+		"time": time.Now(),
+	})
 }
 
 type CreateDto struct {
@@ -35,7 +42,7 @@ func (x *Controller) Create(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := x.Service.Transform(dto.Data, dto.Format); err != nil {
+	if err := x.IndexService.Transform(dto.Data, dto.Format); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
@@ -43,7 +50,7 @@ func (x *Controller) Create(ctx context.Context, c *app.RequestContext) {
 	dto.Data["update_time"] = time.Now()
 
 	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+		if err := x.IndexService.Pending(ctx, dto.Txn, PendingDto{
 			Action: "create",
 			Name:   dto.Collection,
 			Data:   dto.Data,
@@ -56,7 +63,7 @@ func (x *Controller) Create(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	r, err := x.Service.Create(ctx, dto.Collection, dto.Data)
+	r, err := x.IndexService.Create(ctx, dto.Collection, dto.Data)
 	if err != nil {
 		c.Error(err)
 		return
@@ -83,7 +90,7 @@ func (x *Controller) BulkCreate(ctx context.Context, c *app.RequestContext) {
 
 	docs := make([]interface{}, len(dto.Data))
 	for i, doc := range dto.Data {
-		if err := x.Service.Transform(doc, dto.Format); err != nil {
+		if err := x.IndexService.Transform(doc, dto.Format); err != nil {
 			c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 			return
 		}
@@ -93,7 +100,7 @@ func (x *Controller) BulkCreate(ctx context.Context, c *app.RequestContext) {
 	}
 
 	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+		if err := x.IndexService.Pending(ctx, dto.Txn, PendingDto{
 			Action: "bulk_create",
 			Name:   dto.Collection,
 			Data:   dto.Data,
@@ -106,7 +113,7 @@ func (x *Controller) BulkCreate(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	r, err := x.Service.BulkCreate(ctx, dto.Collection, docs)
+	r, err := x.IndexService.BulkCreate(ctx, dto.Collection, docs)
 	if err != nil {
 		c.Error(err)
 		return
@@ -130,12 +137,12 @@ func (x *Controller) Size(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := x.Service.Transform(dto.Filter, dto.Format); err != nil {
+	if err := x.IndexService.Transform(dto.Filter, dto.Format); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
 
-	size, err := x.Service.Size(ctx, dto.Collection, dto.Filter)
+	size, err := x.IndexService.Size(ctx, dto.Collection, dto.Filter)
 	if err != nil {
 		c.Error(err)
 		return
@@ -164,12 +171,12 @@ func (x *Controller) Find(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := x.Service.Transform(dto.Filter, dto.Format); err != nil {
+	if err := x.IndexService.Transform(dto.Filter, dto.Format); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
 
-	size, err := x.Service.Size(ctx, dto.Collection, dto.Filter)
+	size, err := x.IndexService.Size(ctx, dto.Collection, dto.Filter)
 	if err != nil {
 		c.Error(err)
 		return
@@ -195,13 +202,13 @@ func (x *Controller) Find(ctx context.Context, c *app.RequestContext) {
 	}
 
 	option := options.Find().
-		SetProjection(x.Service.Projection(dto.Collection, dto.Keys)).
+		SetProjection(x.IndexService.Projection(dto.Collection, dto.Keys)).
 		SetLimit(dto.Pagesize).
 		SetSkip((dto.Page - 1) * dto.Pagesize).
 		SetSort(sort).
 		SetAllowDiskUse(true)
 
-	data, err := x.Service.Find(ctx, dto.Collection, dto.Filter, option)
+	data, err := x.IndexService.Find(ctx, dto.Collection, dto.Filter, option)
 	if err != nil {
 		c.Error(err)
 		return
@@ -227,15 +234,15 @@ func (x *Controller) FindOne(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := x.Service.Transform(dto.Filter, dto.Format); err != nil {
+	if err := x.IndexService.Transform(dto.Filter, dto.Format); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
 
 	option := options.FindOne().
-		SetProjection(x.Service.Projection(dto.Collection, dto.Keys))
+		SetProjection(x.IndexService.Projection(dto.Collection, dto.Keys))
 
-	data, err := x.Service.FindOne(ctx, dto.Collection, dto.Filter, option)
+	data, err := x.IndexService.FindOne(ctx, dto.Collection, dto.Filter, option)
 	if err != nil {
 		c.Error(err)
 		return
@@ -261,9 +268,9 @@ func (x *Controller) FindById(ctx context.Context, c *app.RequestContext) {
 
 	id, _ := primitive.ObjectIDFromHex(dto.Id)
 	option := options.FindOne().
-		SetProjection(x.Service.Projection(dto.Collection, dto.Keys))
+		SetProjection(x.IndexService.Projection(dto.Collection, dto.Keys))
 
-	data, err := x.Service.FindOne(ctx, dto.Collection, M{"_id": id}, option)
+	data, err := x.IndexService.FindOne(ctx, dto.Collection, M{"_id": id}, option)
 	if err != nil {
 		c.Error(err)
 		return
@@ -290,11 +297,11 @@ func (x *Controller) Update(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := x.Service.Transform(dto.Filter, dto.FFormat); err != nil {
+	if err := x.IndexService.Transform(dto.Filter, dto.FFormat); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
-	if err := x.Service.Transform(dto.Data, dto.DFormat); err != nil {
+	if err := x.IndexService.Transform(dto.Data, dto.DFormat); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
@@ -304,7 +311,7 @@ func (x *Controller) Update(ctx context.Context, c *app.RequestContext) {
 	dto.Data["$set"].(M)["update_time"] = time.Now()
 
 	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+		if err := x.IndexService.Pending(ctx, dto.Txn, PendingDto{
 			Action: "update",
 			Name:   dto.Collection,
 			Filter: dto.Filter,
@@ -318,7 +325,7 @@ func (x *Controller) Update(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	r, err := x.Service.Update(ctx, dto.Collection, dto.Filter, dto.Data)
+	r, err := x.IndexService.Update(ctx, dto.Collection, dto.Filter, dto.Data)
 	if err != nil {
 		c.Error(err)
 		return
@@ -344,7 +351,7 @@ func (x *Controller) UpdateById(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := x.Service.Transform(dto.Data, dto.Format); err != nil {
+	if err := x.IndexService.Transform(dto.Data, dto.Format); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
@@ -355,7 +362,7 @@ func (x *Controller) UpdateById(ctx context.Context, c *app.RequestContext) {
 	id, _ := primitive.ObjectIDFromHex(dto.Id)
 
 	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+		if err := x.IndexService.Pending(ctx, dto.Txn, PendingDto{
 			Action: "update_by_id",
 			Name:   dto.Collection,
 			Id:     id,
@@ -369,7 +376,7 @@ func (x *Controller) UpdateById(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	r, err := x.Service.UpdateById(ctx, dto.Collection, id, dto.Data)
+	r, err := x.IndexService.UpdateById(ctx, dto.Collection, id, dto.Data)
 	if err != nil {
 		c.Error(err)
 		return
@@ -395,7 +402,7 @@ func (x *Controller) Replace(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := x.Service.Transform(dto.Data, dto.Format); err != nil {
+	if err := x.IndexService.Transform(dto.Data, dto.Format); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
@@ -404,7 +411,7 @@ func (x *Controller) Replace(ctx context.Context, c *app.RequestContext) {
 	id, _ := primitive.ObjectIDFromHex(dto.Id)
 
 	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+		if err := x.IndexService.Pending(ctx, dto.Txn, PendingDto{
 			Action: "replace",
 			Name:   dto.Collection,
 			Id:     id,
@@ -418,7 +425,7 @@ func (x *Controller) Replace(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	r, err := x.Service.Replace(ctx, dto.Collection, id, dto.Data)
+	r, err := x.IndexService.Replace(ctx, dto.Collection, id, dto.Data)
 	if err != nil {
 		c.Error(err)
 		return
@@ -445,7 +452,7 @@ func (x *Controller) Delete(ctx context.Context, c *app.RequestContext) {
 	id, _ := primitive.ObjectIDFromHex(dto.Id)
 
 	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+		if err := x.IndexService.Pending(ctx, dto.Txn, PendingDto{
 			Action: "delete",
 			Name:   dto.Collection,
 			Id:     id,
@@ -458,7 +465,7 @@ func (x *Controller) Delete(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	r, err := x.Service.Delete(ctx, dto.Collection, id)
+	r, err := x.IndexService.Delete(ctx, dto.Collection, id)
 	if err != nil {
 		c.Error(err)
 		return
@@ -483,13 +490,13 @@ func (x *Controller) BulkDelete(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	if err := x.Service.Transform(dto.Data, dto.Format); err != nil {
+	if err := x.IndexService.Transform(dto.Data, dto.Format); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
 	}
 
 	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+		if err := x.IndexService.Pending(ctx, dto.Txn, PendingDto{
 			Action: "bulk_delete",
 			Name:   dto.Collection,
 			Data:   dto.Data,
@@ -502,7 +509,7 @@ func (x *Controller) BulkDelete(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	r, err := x.Service.BulkDelete(ctx, dto.Collection, dto.Data)
+	r, err := x.IndexService.BulkDelete(ctx, dto.Collection, dto.Data)
 	if err != nil {
 		c.Error(err)
 		return
@@ -532,7 +539,7 @@ func (x *Controller) Sort(ctx context.Context, c *app.RequestContext) {
 	}
 
 	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+		if err := x.IndexService.Pending(ctx, dto.Txn, PendingDto{
 			Action: "sort",
 			Name:   dto.Collection,
 			Data:   dto.Data,
@@ -545,7 +552,7 @@ func (x *Controller) Sort(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	_, err := x.Service.Sort(ctx, dto.Collection, dto.Data.Key, dto.Data.Values)
+	_, err := x.IndexService.Sort(ctx, dto.Collection, dto.Data.Key, dto.Data.Values)
 	if err != nil {
 		c.Error(err)
 		return
@@ -558,7 +565,7 @@ func (x *Controller) Sort(ctx context.Context, c *app.RequestContext) {
 // @router /transaction [POST]
 func (x *Controller) Transaction(ctx context.Context, c *app.RequestContext) {
 	txn := uuid.New().String()
-	if err := x.Service.Transaction(ctx, txn); err != nil {
+	if err := x.IndexService.Transaction(ctx, txn); err != nil {
 		c.Error(err)
 		return
 	}
@@ -581,7 +588,7 @@ func (x *Controller) Commit(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	r, err := x.Service.Commit(ctx, dto.Txn)
+	r, err := x.IndexService.Commit(ctx, dto.Txn)
 	if err != nil {
 		c.Error(err)
 		return
