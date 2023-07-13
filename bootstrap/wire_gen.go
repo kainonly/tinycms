@@ -7,8 +7,8 @@
 package bootstrap
 
 import (
-	"github.com/weplanx/rest/api"
-	"github.com/weplanx/rest/common"
+	"rest-demo/api"
+	"rest-demo/common"
 )
 
 // Injectors from wire.go:

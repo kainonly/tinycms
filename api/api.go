@@ -11,8 +11,8 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/errors"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/google/wire"
-	"github.com/weplanx/rest/common"
 	"net/http"
+	"rest-demo/common"
 )
 
 var Provides = wire.NewSet(

@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/weplanx/rest/bootstrap"
-	"github.com/weplanx/rest/common"
+	"rest-demo/bootstrap"
+	"rest-demo/common"
 	"time"
 )
 

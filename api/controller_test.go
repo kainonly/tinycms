@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/go-funk"
 	"github.com/weplanx/go-wpx/passlib"
-	"github.com/weplanx/rest/api"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
+	"rest-demo/api"
 	"testing"
 	"time"
 )

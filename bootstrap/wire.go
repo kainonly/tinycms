@@ -5,8 +5,8 @@ package bootstrap
 
 import (
 	"github.com/google/wire"
-	"github.com/weplanx/rest/api"
-	"github.com/weplanx/rest/common"
+	"rest-demo/api"
+	"rest-demo/common"
 )
 
 func NewAPI(values *common.Values) (*api.API, error) {
