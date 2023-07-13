@@ -5,7 +5,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
-	"github.com/weplanx/rest/api"
+	"rest-demo/api"
 	"testing"
 )
 
