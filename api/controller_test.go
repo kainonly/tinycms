@@ -24,7 +24,7 @@ var userId string
 
 func TestCreateBadValidate(t *testing.T) {
 	body, _ := sonic.Marshal(M{})
-	w := ut.PerformRequest(h.Engine, "POST", "/users",
+	w := ut.PerformRequest(h.Engine, "POST", "/users/create",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -37,11 +37,11 @@ func TestCreateBadTransform(t *testing.T) {
 		"data": M{
 			"department": "123",
 		},
-		"format": M{
+		"xdata": M{
 			"department": "oid",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "POST", "/users",
+	w := ut.PerformRequest(h.Engine, "POST", "/users/create",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -57,13 +57,13 @@ func TestCreate(t *testing.T) {
 			"department": "624a8facb4e5d150793d6353",
 			"roles":      roles,
 		},
-		"format": M{
+		"xdata": M{
 			"password":   "password",
 			"department": "oid",
 			"roles":      "oids",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "POST", "/users",
+	w := ut.PerformRequest(h.Engine, "POST", "/users/create",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -98,7 +98,7 @@ func TestCreateBadDbValidate(t *testing.T) {
 			"name": "weplanx",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "POST", "/users",
+	w := ut.PerformRequest(h.Engine, "POST", "/users/create",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -120,11 +120,11 @@ func TestCreateEvent(t *testing.T) {
 			"secret":      "abcd",
 			"expire_time": expire,
 		},
-		"format": M{
+		"xdata": M{
 			"expire_time": "timestamp",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "POST", "/projects",
+	w := ut.PerformRequest(h.Engine, "POST", "/projects/create",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -159,12 +159,12 @@ func TestCreateBadEvent(t *testing.T) {
 			"secret":      "abcd",
 			"expire_time": expire,
 		},
-		"format": M{
+		"xdata": M{
 			"expire_time": "timestamp",
 		},
 	})
 	RemoveStream(t)
-	w := ut.PerformRequest(h.Engine, "POST", "/projects",
+	w := ut.PerformRequest(h.Engine, "POST", "/projects/create",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -204,7 +204,7 @@ func TestBulkCreateBadTransform(t *testing.T) {
 				Time:     "bad-time",
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"time": "timestamp",
 		},
 	})
@@ -232,7 +232,7 @@ func TestBulkCreate(t *testing.T) {
 	}
 	body, _ := sonic.Marshal(M{
 		"data": orders,
-		"format": M{
+		"xdata": M{
 			"time": "timestamp",
 		},
 	})
@@ -311,7 +311,7 @@ func TestBulkCreateEvent(t *testing.T) {
 
 	body, _ := sonic.Marshal(M{
 		"data": data,
-		"format": M{
+		"xdata": M{
 			"expire_time": "timestamp",
 		},
 	})
@@ -365,7 +365,7 @@ func TestBulkCreateBadEvent(t *testing.T) {
 				"expire_time": expire2,
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"expire_time": "timestamp",
 		},
 	})
@@ -380,12 +380,9 @@ func TestBulkCreateBadEvent(t *testing.T) {
 }
 
 func TestSizeBadValidate(t *testing.T) {
-	u := url.URL{Path: "/orders/_size"}
-	query := u.Query()
-	query.Set("filter", "$$$$")
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{})
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/size",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -393,19 +390,16 @@ func TestSizeBadValidate(t *testing.T) {
 }
 
 func TestSizeBadTransform(t *testing.T) {
-	u := url.URL{Path: "/orders/_size"}
-	filter, _ := sonic.MarshalString(M{
-		"_id": M{"$in": []string{"123456"}},
+	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"_id": M{"$in": []string{"123456"}},
+		},
+		"xfilter": M{
+			"_id.$in": "oids",
+		},
 	})
-	query := u.Query()
-	query.Set("filter", filter)
-	format, _ := sonic.MarshalString(M{
-		"_id.$in": "oids",
-	})
-	query.Set("format", format)
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/size",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -413,8 +407,11 @@ func TestSizeBadTransform(t *testing.T) {
 }
 
 func TestSize(t *testing.T) {
-	w := ut.PerformRequest(h.Engine, "GET", "/orders/_size",
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{
+		"filter": M{},
+	})
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/size",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -424,20 +421,17 @@ func TestSize(t *testing.T) {
 }
 
 func TestSizeWithFilterAndFormat(t *testing.T) {
-	u := url.URL{Path: "/orders/_size"}
 	oids := orderIds[:5]
-	filter, _ := sonic.MarshalString(M{
-		"_id": M{"$in": oids},
+	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"_id": M{"$in": oids},
+		},
+		"xfilter": M{
+			"_id.$in": "oids",
+		},
 	})
-	query := u.Query()
-	query.Set("filter", filter)
-	format, _ := sonic.MarshalString(M{
-		"_id.$in": "oids",
-	})
-	query.Set("format", format)
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/size",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -447,12 +441,13 @@ func TestSizeWithFilterAndFormat(t *testing.T) {
 }
 
 func TestSizeBadFilter(t *testing.T) {
-	u := url.URL{Path: "/orders/_size"}
-	query := u.Query()
-	query.Set("filter", `{"abc":{"$":"v"}}`)
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"abc": M{"$": "v"},
+		},
+	})
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/size",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -460,12 +455,9 @@ func TestSizeBadFilter(t *testing.T) {
 }
 
 func TestFindBadValidate(t *testing.T) {
-	u := url.URL{Path: "/orders"}
-	query := u.Query()
-	query.Set("filter", "$$$$")
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{})
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/find",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -473,19 +465,16 @@ func TestFindBadValidate(t *testing.T) {
 }
 
 func TestFindBadTransform(t *testing.T) {
-	u := url.URL{Path: "/orders"}
-	filter, _ := sonic.MarshalString(M{
-		"_id": M{"$in": []string{"123456"}},
+	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"_id": M{"$in": []string{"123456"}},
+		},
+		"xfilter": M{
+			"_id.$in": "oids",
+		},
 	})
-	query := u.Query()
-	query.Set("filter", filter)
-	format, _ := sonic.MarshalString(M{
-		"_id.$in": "oids",
-	})
-	query.Set("format", format)
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/find",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -493,8 +482,11 @@ func TestFindBadTransform(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
-	w := ut.PerformRequest(h.Engine, "GET", "/orders",
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{
+		"filter": M{},
+	})
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/find",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -517,12 +509,15 @@ func TestFind(t *testing.T) {
 }
 
 func TestFindSort(t *testing.T) {
-	u := url.URL{Path: "/orders"}
+	u := url.URL{Path: "/orders/find"}
 	query := u.Query()
 	query.Add("sort", "cost:1")
 	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{
+		"filter": M{},
+	})
+	w := ut.PerformRequest(h.Engine, "POST", u.RequestURI(),
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -539,12 +534,13 @@ func TestFindSort(t *testing.T) {
 }
 
 func TestFindBadFilter(t *testing.T) {
-	u := url.URL{Path: "/orders"}
-	query := u.Query()
-	query.Set("filter", `{"abc":{"$":"v"}}`)
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"abc": M{"$": "v"},
+		},
+	})
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/find",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -552,11 +548,11 @@ func TestFindBadFilter(t *testing.T) {
 }
 
 func TestFindBadKeys(t *testing.T) {
-	u := url.URL{Path: "/orders"}
+	u := url.URL{Path: "/orders/find"}
 	query := u.Query()
 	query.Add("keys", `abc1`)
 	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", u.RequestURI(),
 		&ut.Body{},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -565,12 +561,9 @@ func TestFindBadKeys(t *testing.T) {
 }
 
 func TestFindOneBadValidate(t *testing.T) {
-	u := url.URL{Path: "/users/_one"}
-	query := u.Query()
-	query.Set("filter", "$$$$")
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{})
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/find_one",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -578,19 +571,16 @@ func TestFindOneBadValidate(t *testing.T) {
 }
 
 func TestFindOneBadTransform(t *testing.T) {
-	u := url.URL{Path: "/users/_one"}
-	filter, _ := sonic.MarshalString(M{
-		"_id": M{"$in": []string{"123456"}},
+	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"_id": M{"$in": []string{"123456"}},
+		},
+		"xfilter": M{
+			"_id.$in": "oids",
+		},
 	})
-	query := u.Query()
-	query.Set("filter", filter)
-	format, _ := sonic.MarshalString(M{
-		"_id.$in": "oids",
-	})
-	query.Set("format", format)
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/find_one",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -598,13 +588,13 @@ func TestFindOneBadTransform(t *testing.T) {
 }
 
 func TestFindOne(t *testing.T) {
-	u := url.URL{Path: "/users/_one"}
-	filter, _ := sonic.MarshalString(M{"name": "weplanx"})
-	query := u.Query()
-	query.Set("filter", filter)
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"name": "weplanx",
+		},
+	})
+	w := ut.PerformRequest(h.Engine, "POST", "/users/find_one",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -621,12 +611,15 @@ func TestFindOne(t *testing.T) {
 }
 
 func TestFindOneBadFilter(t *testing.T) {
-	u := url.URL{Path: "/users/_one"}
-	query := u.Query()
-	query.Set("filter", `{"abc":{"$":"v"}}`)
-	u.RawQuery = query.Encode()
-	w := ut.PerformRequest(h.Engine, "GET", u.RequestURI(),
-		&ut.Body{},
+	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"abc": M{
+				"$": "v",
+			},
+		},
+	})
+	w := ut.PerformRequest(h.Engine, "POST", "/orders/find_one",
+		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
 	resp := w.Result()
@@ -685,12 +678,8 @@ func TestFindByIdBadKeys(t *testing.T) {
 }
 
 func TestUpdateBadValidate(t *testing.T) {
-	u := url.URL{Path: fmt.Sprintf(`/users`)}
-	query := u.Query()
-	query.Set("filter", "$$$$")
-	u.RawQuery = query.Encode()
 	body, _ := sonic.Marshal(M{})
-	w := ut.PerformRequest(h.Engine, "PATCH", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", "/users/update",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -699,28 +688,23 @@ func TestUpdateBadValidate(t *testing.T) {
 }
 
 func TestUpdateBadFilterTransform(t *testing.T) {
-	u := url.URL{Path: fmt.Sprintf(`/users`)}
-	filter, _ := sonic.MarshalString(M{
-		"_id": M{"$in": []string{"123456"}},
-	})
-	query := u.Query()
-	query.Set("filter", filter)
-	format, _ := sonic.MarshalString(M{
-		"_id.$in": "oids",
-	})
-	query.Set("format", format)
-	u.RawQuery = query.Encode()
 	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"_id": M{"$in": []string{"123456"}},
+		},
+		"xfilter": M{
+			"_id.$in": "oids",
+		},
 		"data": M{
 			"$set": M{
 				"department": "63579b8b9db7928aaebbe705",
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.department": "oid",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "PATCH", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", "/users/update",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -729,22 +713,20 @@ func TestUpdateBadFilterTransform(t *testing.T) {
 }
 
 func TestUpdateBadDataTransform(t *testing.T) {
-	u := url.URL{Path: fmt.Sprintf(`/users`)}
-	filter, _ := sonic.MarshalString(M{"name": "weplanx"})
-	query := u.Query()
-	query.Set("filter", filter)
-	u.RawQuery = query.Encode()
 	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"name": "weplanx",
+		},
 		"data": M{
 			"$set": M{
 				"department": "123456",
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.department": "oid",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "PATCH", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", "/users/update",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -753,22 +735,20 @@ func TestUpdateBadDataTransform(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	u := url.URL{Path: fmt.Sprintf(`/users`)}
-	filter, _ := sonic.MarshalString(M{"name": "weplanx"})
-	query := u.Query()
-	query.Set("filter", filter)
-	u.RawQuery = query.Encode()
 	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"name": "weplanx",
+		},
 		"data": M{
 			"$set": M{
 				"department": "63579b8b9db7928aaebbe705",
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.department": "oid",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "PATCH", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", "/users/update",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -797,23 +777,21 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestUpdatePush(t *testing.T) {
-	u := url.URL{Path: fmt.Sprintf(`/users`)}
-	filter, _ := sonic.MarshalString(M{"name": "weplanx"})
-	query := u.Query()
-	query.Set("filter", filter)
-	u.RawQuery = query.Encode()
 	roles = append(roles, "62ce35710d94671a2e4a7d4c")
 	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"name": "weplanx",
+		},
 		"data": M{
 			"$push": M{
 				"roles": "62ce35710d94671a2e4a7d4c",
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$push.roles": "oid",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "PATCH", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", "/users/update",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -842,19 +820,17 @@ func TestUpdatePush(t *testing.T) {
 }
 
 func TestUpdateBadDbValidate(t *testing.T) {
-	u := url.URL{Path: fmt.Sprintf(`/users`)}
-	filter, _ := sonic.MarshalString(M{"name": "weplanx"})
-	query := u.Query()
-	query.Set("filter", filter)
-	u.RawQuery = query.Encode()
 	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"name": "weplanx",
+		},
 		"data": M{
 			"$set": M{
 				"department": "123456",
 			},
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "PATCH", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", "/users/update",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -866,24 +842,22 @@ func TestUpdateEvent(t *testing.T) {
 	ch := make(chan api.PublishDto)
 	go MockSubscribe(t, ch)
 
-	u := url.URL{Path: fmt.Sprintf(`/projects`)}
-	filter, _ := sonic.MarshalString(M{"namespace": "default"})
-	query := u.Query()
-	query.Set("filter", filter)
-	u.RawQuery = query.Encode()
 	expire := time.Now().Add(time.Hour * 72).Format(time.RFC3339)
 	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"namespace": "default",
+		},
 		"data": M{
 			"$set": M{
 				"secret":      "qwer",
 				"expire_time": expire,
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.expire_time": "timestamp",
 		},
 	})
-	w := ut.PerformRequest(h.Engine, "PATCH", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", "/projects/update",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -906,25 +880,23 @@ func TestUpdateEvent(t *testing.T) {
 }
 
 func TestUpdateBadEvent(t *testing.T) {
-	u := url.URL{Path: fmt.Sprintf(`/projects`)}
-	filter, _ := sonic.MarshalString(M{"namespace": "default"})
-	query := u.Query()
-	query.Set("filter", filter)
-	u.RawQuery = query.Encode()
 	expire := time.Now().Add(time.Hour * 72).Format(time.RFC3339)
 	body, _ := sonic.Marshal(M{
+		"filter": M{
+			"namespace": "default",
+		},
 		"data": M{
 			"$set": M{
 				"secret":      "qwer",
 				"expire_time": expire,
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.expire_time": "timestamp",
 		},
 	})
 	RemoveStream(t)
-	w := ut.PerformRequest(h.Engine, "PATCH", u.RequestURI(),
+	w := ut.PerformRequest(h.Engine, "POST", "/projects/update",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
 		ut.Header{Key: "content-type", Value: "application/json"},
 	)
@@ -951,7 +923,7 @@ func TestUpdateByIdBadDataTransform(t *testing.T) {
 				"department": "123456",
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.department": "oid",
 		},
 	})
@@ -970,7 +942,7 @@ func TestUpdateById(t *testing.T) {
 				"department": "62cbf9ac465f45091e981b1e",
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.department": "oid",
 		},
 	})
@@ -1010,7 +982,7 @@ func TestUpdateByIdPush(t *testing.T) {
 				"roles": "62ce35b9b1d8fe7e38ef4c8c",
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$push.roles": "oid",
 		},
 	})
@@ -1070,7 +1042,7 @@ func TestUpdateByIdEvent(t *testing.T) {
 				"expire_time": expire,
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.expire_time": "timestamp",
 		},
 	})
@@ -1104,7 +1076,7 @@ func TestUpdateByIdBadEvent(t *testing.T) {
 				"expire_time": expire,
 			},
 		},
-		"format": M{
+		"xdata": M{
 			"$set.expire_time": "timestamp",
 		},
 	})
@@ -1137,7 +1109,7 @@ func TestReplaceBadTransform(t *testing.T) {
 			"department": "123456",
 			"roles":      []string{},
 		},
-		"format": M{
+		"xdata": M{
 			"password":   "password",
 			"department": "oid",
 			"roles":      "oids",
@@ -1159,7 +1131,7 @@ func TestReplace(t *testing.T) {
 			"department": nil,
 			"roles":      []string{},
 		},
-		"format": M{
+		"xdata": M{
 			"password":   "password",
 			"department": "oid",
 			"roles":      "oids",
@@ -1215,7 +1187,7 @@ func TestReplaceEvent(t *testing.T) {
 			"secret":      "123456",
 			"expire_time": expire,
 		},
-		"format": M{
+		"xdata": M{
 			"expire_time": "timestamp",
 		},
 	})
@@ -1252,7 +1224,7 @@ func TestReplaceBadEvent(t *testing.T) {
 			"secret":      "123456",
 			"expire_time": expire,
 		},
-		"format": M{
+		"xdata": M{
 			"expire_time": "timestamp",
 		},
 	})
@@ -1333,7 +1305,7 @@ func TestDeleteBadEvent(t *testing.T) {
 
 func TestBulkDeleteBadValidate(t *testing.T) {
 	body, _ := sonic.Marshal(M{
-		"data": M{},
+		"filter": M{},
 	})
 	w := ut.PerformRequest(h.Engine, "POST", "/orders/bulk_delete",
 		&ut.Body{Body: bytes.NewBuffer(body), Len: len(body)},
@@ -1345,10 +1317,10 @@ func TestBulkDeleteBadValidate(t *testing.T) {
 
 func TestBulkDeleteBadTransform(t *testing.T) {
 	body, _ := sonic.Marshal(M{
-		"data": M{
+		"filter": M{
 			"_id": M{"$in": []string{"12345"}},
 		},
-		"format": M{
+		"xfilter": M{
 			"_id.$in": "oids",
 		},
 	})
@@ -1362,10 +1334,10 @@ func TestBulkDeleteBadTransform(t *testing.T) {
 
 func TestBulkDelete(t *testing.T) {
 	body, _ := sonic.Marshal(M{
-		"data": M{
+		"filter": M{
 			"_id": M{"$in": orderIds[5:]},
 		},
-		"format": M{
+		"xfilter": M{
 			"_id.$in": "oids",
 		},
 	})
@@ -1391,7 +1363,7 @@ func TestBulkDelete(t *testing.T) {
 
 func TestBulkDeleteBadFilter(t *testing.T) {
 	body, _ := sonic.Marshal(M{
-		"data": M{
+		"filter": M{
 			"abc": M{"$": "v"},
 		},
 	})
@@ -1408,7 +1380,7 @@ func TestBulkDeleteEvent(t *testing.T) {
 	go MockSubscribe(t, ch)
 
 	body, _ := sonic.Marshal(M{
-		"data": M{
+		"filter": M{
 			"namespace": M{"$in": []string{"test1", "test2"}},
 		},
 	})
@@ -1434,7 +1406,7 @@ func TestBulkDeleteEvent(t *testing.T) {
 
 func TestBulkDeleteBadEvent(t *testing.T) {
 	body, _ := sonic.Marshal(M{
-		"data": M{
+		"filter": M{
 			"namespace": M{"$in": []string{"test1", "test2"}},
 		},
 	})
