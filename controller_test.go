@@ -6,10 +6,10 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
+	"github.com/kainonly/mrest"
 	"github.com/stretchr/testify/assert"
 	"github.com/thoas/go-funk"
 	"github.com/weplanx/go/passlib"
-	"github.com/weplanx/go/rest"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -134,7 +134,7 @@ func TestCreateDbJSONSchemaBad(t *testing.T) {
 var projectId string
 
 func TestCreateEvent(t *testing.T) {
-	ch := make(chan rest.PublishDto)
+	ch := make(chan mrest.PublishDto)
 	go MockSubscribe(t, ch)
 
 	expire := time.Now().Add(time.Hour * 24).Format(time.RFC3339)
@@ -326,7 +326,7 @@ func TestBulkCreateDbJSONSchemaBad(t *testing.T) {
 var projectIds []string
 
 func TestBulkCreateEvent(t *testing.T) {
-	ch := make(chan rest.PublishDto)
+	ch := make(chan mrest.PublishDto)
 	go MockSubscribe(t, ch)
 
 	expire := make([]string, 10)
@@ -844,7 +844,7 @@ func TestUpdateDbJSONSchemaBad(t *testing.T) {
 }
 
 func TestUpdateEvent(t *testing.T) {
-	ch := make(chan rest.PublishDto)
+	ch := make(chan mrest.PublishDto)
 	go MockSubscribe(t, ch)
 
 	expire := time.Now().Add(time.Hour * 72).Format(time.RFC3339)
@@ -1040,7 +1040,7 @@ func TestUpdateByIdDbJSONSchemaBad(t *testing.T) {
 }
 
 func TestUpdateByIdEvent(t *testing.T) {
-	ch := make(chan rest.PublishDto)
+	ch := make(chan mrest.PublishDto)
 	go MockSubscribe(t, ch)
 
 	expire := time.Now().Add(time.Hour * 12).Format(time.RFC3339)
@@ -1191,7 +1191,7 @@ func TestReplaceDbJSONSchemaBad(t *testing.T) {
 }
 
 func TestReplaceEvent(t *testing.T) {
-	ch := make(chan rest.PublishDto)
+	ch := make(chan mrest.PublishDto)
 	go MockSubscribe(t, ch)
 
 	expire := time.Now().Add(time.Hour * 24).Format(time.RFC3339)
@@ -1286,7 +1286,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestDeleteEvent(t *testing.T) {
-	ch := make(chan rest.PublishDto)
+	ch := make(chan mrest.PublishDto)
 	go MockSubscribe(t, ch)
 
 	resp, err := R("DELETE", fmt.Sprintf(`/projects/%s`, projectId), nil)
@@ -1395,7 +1395,7 @@ func TestBulkDeleteFilterBad(t *testing.T) {
 }
 
 func TestBulkDeleteEvent(t *testing.T) {
-	ch := make(chan rest.PublishDto)
+	ch := make(chan mrest.PublishDto)
 	go MockSubscribe(t, ch)
 
 	resp, err := R("POST", "/projects/bulk_delete", M{
@@ -1501,7 +1501,7 @@ func TestSort(t *testing.T) {
 }
 
 func TestSortEvent(t *testing.T) {
-	ch := make(chan rest.PublishDto)
+	ch := make(chan mrest.PublishDto)
 	go MockSubscribe(t, ch)
 
 	projectIds = funk.Reverse(projectIds).([]string)
