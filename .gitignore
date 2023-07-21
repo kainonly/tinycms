@@ -22,6 +22,3 @@
 !.vscode/extensions.json
 
 /vendor
-.env
-
-deployment.yml

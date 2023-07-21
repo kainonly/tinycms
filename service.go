@@ -1,59 +1,38 @@
-package api
+package mrest
 
 import (
 	"context"
 	"fmt"
 	"github.com/bytedance/sonic"
-	"github.com/cloudwego/hertz/pkg/common/errors"
 	"github.com/nats-io/nats.go"
-	"github.com/weplanx/go-wpx/passlib"
+	"github.com/redis/go-redis/v9"
+	"github.com/weplanx/go/passlib"
+	"github.com/weplanx/go/values"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readconcern"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"rest-demo/common"
 	"strings"
 	"time"
 )
 
 type Service struct {
-	*common.Inject
+	Namespace string
+	Mgo       *mongo.Client
+	Db        *mongo.Database
+	RDb       *redis.Client
+	JetStream nats.JetStreamContext
+	KeyValue  nats.KeyValue
+	Values    *values.DynamicValues
 }
 
-type M = map[string]interface{}
-
-func (x *Service) Fetch(v interface{}) (err error) {
-	var entry nats.KeyValueEntry
-	if entry, err = x.KeyValue.Get("rest"); err != nil {
-		return
+func (x *Service) IsForbid(name string) bool {
+	if x.Values.RestControls[name] == nil {
+		return true
 	}
-	if err = sonic.Unmarshal(entry.Value(), v); err != nil {
-		return
-	}
-	return
-}
-
-func (x *Service) Sync(ok chan interface{}) (err error) {
-	if err = x.Fetch(x.V.Options); err != nil {
-		return
-	}
-	current := time.Now()
-	var watch nats.KeyWatcher
-	watch, err = x.KeyValue.Watch("rest")
-	for entry := range watch.Updates() {
-		if entry == nil || entry.Created().Unix() < current.Unix() {
-			continue
-		}
-		if err = x.Fetch(x.V.Options); err != nil {
-			return
-		}
-		if ok != nil {
-			ok <- x.V.Options
-		}
-	}
-	return
+	return !x.Values.RestControls[name].Status
 }
 
 func (x *Service) Create(ctx context.Context, name string, doc M) (r interface{}, err error) {
@@ -159,8 +138,8 @@ func (x *Service) Replace(ctx context.Context, name string, id primitive.ObjectI
 
 func (x *Service) Delete(ctx context.Context, name string, id primitive.ObjectID) (r interface{}, err error) {
 	filter := M{
-		"_id":                  id,
-		"metadata.undeletable": bson.M{"$exists": false},
+		"_id":             id,
+		"metadata.retain": bson.M{"$exists": false},
 	}
 	if r, err = x.Db.Collection(name).DeleteOne(ctx, filter); err != nil {
 		return
@@ -221,15 +200,10 @@ func (x *Service) Sort(ctx context.Context, name string, key string, ids []primi
 	return
 }
 
-func (x *Service) Transaction(ctx context.Context, txn string) (err error) {
-	key := fmt.Sprintf(`%s:transaction:%s`, x.V.Namespace, txn)
-	if err = x.RDb.LPush(ctx, key, time.Now().Format(time.RFC3339)).Err(); err != nil {
-		return
-	}
-	if err = x.RDb.Expire(ctx, key, time.Hour*5).Err(); err != nil {
-		return
-	}
-	return
+func (x *Service) Transaction(ctx context.Context, txn string) {
+	key := fmt.Sprintf(`%s:transaction:%s`, x.Namespace, txn)
+	x.RDb.LPush(ctx, key, time.Now().Format(time.RFC3339)).Val()
+	x.RDb.Expire(ctx, key, time.Hour*5).Val()
 }
 
 type PendingDto struct {
@@ -240,8 +214,22 @@ type PendingDto struct {
 	Data   interface{}        `json:"data,omitempty"`
 }
 
+func (x *Service) TxnNotExists(ctx context.Context, key string) (err error) {
+	var exists int64
+	if exists, err = x.RDb.Exists(ctx, key).Result(); err != nil {
+		return
+	}
+	if exists != 1 {
+		return ErrTxnNotExist
+	}
+	return
+}
+
 func (x *Service) Pending(ctx context.Context, txn string, dto PendingDto) (err error) {
-	key := fmt.Sprintf(`%s:transaction:%s`, x.V.Namespace, txn)
+	key := fmt.Sprintf(`%s:transaction:%s`, x.Namespace, txn)
+	if err = x.TxnNotExists(ctx, key); err != nil {
+		return
+	}
 	var b []byte
 	if b, err = sonic.Marshal(dto); err != nil {
 		return
@@ -252,15 +240,16 @@ func (x *Service) Pending(ctx context.Context, txn string, dto PendingDto) (err 
 	return
 }
 
-var ErrTxnTimeOut = errors.NewPublic("the transaction has timed out")
-
 func (x *Service) Commit(ctx context.Context, txn string) (_ interface{}, err error) {
-	key := fmt.Sprintf(`%s:transaction:%s`, x.V.Namespace, txn)
+	key := fmt.Sprintf(`%s:transaction:%s`, x.Namespace, txn)
+	if err = x.TxnNotExists(ctx, key); err != nil {
+		return
+	}
 	var begin time.Time
 	if begin, err = x.RDb.RPop(ctx, key).Time(); err != nil {
 		return
 	}
-	if time.Since(begin) > time.Second*30 {
+	if time.Since(begin) > x.Values.RestTxnTimeout {
 		err = ErrTxnTimeOut
 		return
 	}
@@ -315,96 +304,107 @@ func (x *Service) Invoke(ctx context.Context, dto PendingDto) (_ interface{}, _ 
 	case "delete":
 		return x.Delete(ctx, dto.Name, dto.Id)
 	case "bulk_delete":
-		return x.BulkDelete(ctx, dto.Name, dto.Data.(M))
+		return x.BulkDelete(ctx, dto.Name, dto.Filter)
 	case "sort":
-		data := dto.Data.(SortDtoData)
-		return x.Sort(ctx, dto.Name, data.Key, data.Values)
+		data := dto.Data.(M)
+		var ids []primitive.ObjectID
+		for _, v := range data["values"].([]interface{}) {
+			id, _ := primitive.ObjectIDFromHex(v.(string))
+			ids = append(ids, id)
+		}
+		return x.Sort(ctx, dto.Name, data["key"].(string), ids)
 	}
 	return
 }
 
-func (x *Service) Transform(data M, format M) (err error) {
-	for path, kind := range format {
-		keys := strings.Split(path, ".")
-		if err = x.Pipe(data, keys, kind); err != nil {
+func (x *Service) Transform(data M, rules M) (err error) {
+	for key, value := range rules {
+		paths := strings.Split(key, ".")
+		if err = x.Pipe(data, paths, value); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func (x *Service) Pipe(data M, keys []string, kind interface{}) (err error) {
-	var cursor interface{}
-	cursor = data
-	n := len(keys) - 1
-	for i, key := range keys[:n] {
-		if key == "$" {
-			for _, v := range cursor.([]interface{}) {
-				if err = x.Pipe(v.(M), keys[i+1:], kind); err != nil {
+func (x *Service) Pipe(input M, paths []string, kind interface{}) (err error) {
+	var cursor interface{} = input
+	n := len(paths) - 1
+	for i, path := range paths[:n] {
+		if path == "$" {
+			for _, item := range cursor.([]interface{}) {
+				if err = x.Pipe(item.(M), paths[i+1:], kind); err != nil {
 					return
 				}
 			}
 			return
 		}
-		cursor = cursor.(M)[key]
+		if cursor.(M)[path] == nil {
+			return
+		}
+		cursor = cursor.(M)[path]
 	}
-	key := keys[n]
+	key := paths[n]
 	if cursor == nil || cursor.(M)[key] == nil {
 		return
 	}
+	unknow := cursor.(M)[key]
+	var data interface{}
 	switch kind {
 	case "oid":
-		if cursor.(M)[key], err = primitive.ObjectIDFromHex(cursor.(M)[key].(string)); err != nil {
+		if data, err = primitive.ObjectIDFromHex(unknow.(string)); err != nil {
 			return
 		}
 		break
 	case "oids":
-		oids := cursor.(M)[key].([]interface{})
+		oids := unknow.([]interface{})
 		for i, id := range oids {
 			if oids[i], err = primitive.ObjectIDFromHex(id.(string)); err != nil {
 				return
 			}
 		}
+		data = oids
 		break
 	case "date":
-		if cursor.(M)[key], err = time.Parse(time.RFC1123, cursor.(M)[key].(string)); err != nil {
+		if data, err = time.Parse(time.RFC1123, unknow.(string)); err != nil {
 			return
 		}
 		break
 	case "dates":
-		dates := cursor.(M)[key].([]interface{})
+		dates := unknow.([]interface{})
 		for i, date := range dates {
 			if dates[i], err = time.Parse(time.RFC1123, date.(string)); err != nil {
 				return
 			}
 		}
+		data = dates
 		break
 	case "timestamp":
-		if cursor.(M)[key], err = time.Parse(time.RFC3339, cursor.(M)[key].(string)); err != nil {
+		if data, err = time.Parse(time.RFC3339, unknow.(string)); err != nil {
 			return
 		}
 		break
 	case "timestamps":
-		timestamps := cursor.(M)[key].([]interface{})
+		timestamps := unknow.([]interface{})
 		for i, timestamp := range timestamps {
 			if timestamps[i], err = time.Parse(time.RFC3339, timestamp.(string)); err != nil {
 				return
 			}
 		}
+		data = timestamps
 		break
 	case "password":
-		if cursor.(M)[key], _ = passlib.Hash(cursor.(M)[key].(string)); err != nil {
-			return
-		}
+		data, _ = passlib.Hash(unknow.(string))
 		break
 	}
+	cursor.(M)[key] = data
 	return
 }
 
 func (x *Service) Projection(name string, keys []string) (result bson.M) {
 	result = make(bson.M)
-	if x.V.Options != nil && (*x.V.Options)[name] != nil {
-		for _, key := range (*x.V.Options)[name].Keys {
+	if x.Values.RestControls != nil && x.Values.RestControls[name] != nil {
+		for _, key := range x.Values.RestControls[name].Keys {
 			result[key] = 1
 		}
 	}
@@ -430,13 +430,13 @@ type PublishDto struct {
 }
 
 func (x *Service) Publish(ctx context.Context, name string, dto PublishDto) (err error) {
-	if v, ok := (*x.V.Options)[name]; ok {
+	if v, ok := x.Values.RestControls[name]; ok {
 		if !v.Event {
 			return
 		}
 
 		b, _ := sonic.Marshal(dto)
-		subject := fmt.Sprintf(`%s.events.%s`, x.V.Namespace, name)
+		subject := fmt.Sprintf(`%s.events.%s`, x.Namespace, name)
 		if _, err = x.JetStream.Publish(subject, b, nats.Context(ctx)); err != nil {
 			return
 		}
