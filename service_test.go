@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/bytedance/sonic"
+	"github.com/kainonly/mrest"
 	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
-	"github.com/weplanx/go/rest"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -153,11 +153,11 @@ func MockStream(ctx context.Context) (err error) {
 	return
 }
 
-func MockSubscribe(t *testing.T, ch chan rest.PublishDto) {
+func MockSubscribe(t *testing.T, ch chan mrest.PublishDto) {
 	name := fmt.Sprintf(`%s:events:%s`, service.Namespace, "projects")
 	subject := fmt.Sprintf(`%s.events.%s`, service.Namespace, "projects")
 	_, err := service.JetStream.QueueSubscribe(subject, name, func(msg *nats.Msg) {
-		var data rest.PublishDto
+		var data mrest.PublishDto
 		err := sonic.Unmarshal(msg.Data, &data)
 		assert.NoError(t, err)
 

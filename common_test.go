@@ -15,12 +15,12 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol"
 	"github.com/cloudwego/hertz/pkg/route"
+	"github.com/kainonly/mrest"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nkeys"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/weplanx/go/help"
-	"github.com/weplanx/go/rest"
 	"github.com/weplanx/go/values"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -38,7 +38,7 @@ var (
 	rdb      *redis.Client
 	js       nats.JetStreamContext
 	keyvalue nats.KeyValue
-	service  *rest.Service
+	service  *mrest.Service
 	engine   *route.Engine
 )
 
@@ -89,14 +89,14 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 	namespace := os.Getenv("NAMESPACE")
-	service = rest.New(
-		rest.SetNamespace(namespace),
-		rest.SetMongoClient(mgo),
-		rest.SetDatabase(db),
-		rest.SetRedis(rdb),
-		rest.SetJetStream(js),
-		rest.SetKeyValue(keyvalue),
-		rest.SetDynamicValues(&values.DynamicValues{
+	service = mrest.New(
+		mrest.SetNamespace(namespace),
+		mrest.SetMongoClient(mgo),
+		mrest.SetDatabase(db),
+		mrest.SetRedis(rdb),
+		mrest.SetJetStream(js),
+		mrest.SetKeyValue(keyvalue),
+		mrest.SetDynamicValues(&values.DynamicValues{
 			RestControls:   controls,
 			RestTxnTimeout: time.Second * 30,
 		}),
@@ -110,8 +110,24 @@ func TestMain(m *testing.M) {
 	help.RegValidate()
 	engine = route.NewEngine(config.NewOptions([]config.Option{}))
 	engine.Use(ErrHandler())
-	help.RestRoutes(engine.Group(""), &rest.Controller{Service: service})
-
+	x := &mrest.Controller{Service: service}
+	r := engine.Group(":collection")
+	{
+		r.GET(":id", x.FindById)
+		r.POST("create", x.Create)
+		r.POST("bulk_create", x.BulkCreate)
+		r.POST("size", x.Size)
+		r.POST("find", x.Find)
+		r.POST("find_one", x.FindOne)
+		r.POST("update", x.Update)
+		r.POST("bulk_delete", x.BulkDelete)
+		r.POST("sort", x.Sort)
+		r.PATCH(":id", x.UpdateById)
+		r.PUT(":id", x.Replace)
+		r.DELETE(":id", x.Delete)
+	}
+	engine.POST("transaction", x.Transaction)
+	engine.POST("commit", x.Commit)
 	os.Exit(m.Run())
 }
 
