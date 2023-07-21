@@ -1,23 +1,20 @@
-module rest-demo
+module github.com/kainonly/mrest
 
 go 1.20
 
 require (
 	github.com/bytedance/go-tagexpr/v2 v2.9.2
 	github.com/bytedance/gopkg v0.0.0-20220413063733-65bf48ffb3a7
-	github.com/bytedance/sonic v1.9.2
-	github.com/caarlos0/env/v9 v9.0.0
+	github.com/bytedance/sonic v1.8.2
 	github.com/cloudwego/hertz v0.6.6
 	github.com/go-faker/faker/v4 v4.1.1
 	github.com/google/uuid v1.3.0
-	github.com/google/wire v0.5.0
-	github.com/hertz-contrib/requestid v1.1.0
 	github.com/nats-io/nats.go v1.27.1
 	github.com/nats-io/nkeys v0.4.4
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/stretchr/testify v1.8.4
 	github.com/thoas/go-funk v0.9.3
-	github.com/weplanx/go-wpx v0.3.0
+	github.com/weplanx/go v0.4.4
 	go.mongodb.org/mongo-driver v1.12.0
 )
 
@@ -37,7 +34,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
-	github.com/nats-io/jwt/v2 v2.4.1 // indirect
+	github.com/nats-io/jwt/v2 v2.2.1-0.20220330180145-442af02fd36a // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -54,7 +51,7 @@ require (
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	golang.org/x/time v0.3.0 // indirect
+	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -1,4 +1,4 @@
-package api
+package mrest
 
 import (
 	"context"
@@ -19,13 +19,6 @@ type Controller struct {
 	*Service
 }
 
-func (x *Controller) Ping(ctx context.Context, c *app.RequestContext) {
-	c.JSON(http.StatusOK, utils.H{
-		"ip":   c.ClientIP(),
-		"time": time.Now(),
-	})
-}
-
 type CreateDto struct {
 	Collection string `path:"collection" vd:"regexp('^[a-z_]+$');msg:'the collection name must be lowercase letters with underscores'"`
 	Data       M      `json:"data,required" vd:"len($)>0;msg:'document cannot be empty data'"`
@@ -39,6 +32,11 @@ func (x *Controller) Create(ctx context.Context, c *app.RequestContext) {
 	var dto CreateDto
 	if err := c.BindAndValidate(&dto); err != nil {
 		c.Error(err)
+		return
+	}
+
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
 		return
 	}
 
@@ -85,6 +83,11 @@ func (x *Controller) BulkCreate(ctx context.Context, c *app.RequestContext) {
 	var dto BulkCreateDto
 	if err := c.BindAndValidate(&dto); err != nil {
 		c.Error(err)
+		return
+	}
+
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
 		return
 	}
 
@@ -137,6 +140,11 @@ func (x *Controller) Size(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
+		return
+	}
+
 	if err := x.Service.Transform(dto.Filter, dto.Xfilter); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
@@ -168,6 +176,11 @@ func (x *Controller) Find(ctx context.Context, c *app.RequestContext) {
 	var dto FindDto
 	if err := c.BindAndValidate(&dto); err != nil {
 		c.Error(err)
+		return
+	}
+
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
 		return
 	}
 
@@ -234,6 +247,11 @@ func (x *Controller) FindOne(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
+		return
+	}
+
 	if err := x.Service.Transform(dto.Filter, dto.Xfilter); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
@@ -266,6 +284,11 @@ func (x *Controller) FindById(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
+		return
+	}
+
 	id, _ := primitive.ObjectIDFromHex(dto.Id)
 	option := options.FindOne().
 		SetProjection(x.Service.Projection(dto.Collection, dto.Keys))
@@ -294,6 +317,11 @@ func (x *Controller) Update(ctx context.Context, c *app.RequestContext) {
 	var dto UpdateDto
 	if err := c.BindAndValidate(&dto); err != nil {
 		c.Error(err)
+		return
+	}
+
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
 		return
 	}
 
@@ -334,93 +362,6 @@ func (x *Controller) Update(ctx context.Context, c *app.RequestContext) {
 	c.JSON(http.StatusOK, r)
 }
 
-type BulkDeleteDto struct {
-	Collection string `path:"collection,required" vd:"regexp('^[a-z_]+$');msg:'the collection name must be lowercase letters with underscores'"`
-	Filter     M      `json:"filter,required" vd:"len($)>0;msg:'the filter cannot be empty'"`
-	Xfilter    M      `json:"xfilter"`
-	Txn        string `json:"txn"`
-}
-
-// BulkDelete
-// @router /:collection/bulk_delete [POST]
-func (x *Controller) BulkDelete(ctx context.Context, c *app.RequestContext) {
-	var dto BulkDeleteDto
-	if err := c.BindAndValidate(&dto); err != nil {
-		c.Error(err)
-		return
-	}
-
-	if err := x.Service.Transform(dto.Filter, dto.Xfilter); err != nil {
-		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
-		return
-	}
-
-	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
-			Action: "bulk_delete",
-			Name:   dto.Collection,
-			Filter: dto.Filter,
-		}); err != nil {
-			c.Error(err)
-			return
-		}
-
-		c.Status(http.StatusNoContent)
-		return
-	}
-
-	r, err := x.Service.BulkDelete(ctx, dto.Collection, dto.Filter)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	c.JSON(http.StatusOK, r)
-}
-
-type SortDto struct {
-	Collection string      `path:"collection,required" vd:"regexp('^[a-z_]+$');msg:'the collection name must be lowercase letters with underscores'"`
-	Data       SortDtoData `json:"data,required"`
-	Txn        string      `json:"txn"`
-}
-
-type SortDtoData struct {
-	Key    string               `json:"key,required"`
-	Values []primitive.ObjectID `json:"values,required" vd:"len($)>0;msg:'the submission data must be an array of ObjectId'"`
-}
-
-// Sort
-// @router /:collection/sort [POST]
-func (x *Controller) Sort(ctx context.Context, c *app.RequestContext) {
-	var dto SortDto
-	if err := c.BindAndValidate(&dto); err != nil {
-		c.Error(err)
-		return
-	}
-
-	if dto.Txn != "" {
-		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
-			Action: "sort",
-			Name:   dto.Collection,
-			Data:   dto.Data,
-		}); err != nil {
-			c.Error(err)
-			return
-		}
-
-		c.Status(http.StatusNoContent)
-		return
-	}
-
-	_, err := x.Service.Sort(ctx, dto.Collection, dto.Data.Key, dto.Data.Values)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	c.Status(http.StatusNoContent)
-}
-
 type UpdateByIdDto struct {
 	Collection string `path:"collection,required" vd:"regexp('^[a-z_]+$');msg:'the collection name must be lowercase letters with underscores'"`
 	Id         string `path:"id,required" vd:"mongoId($);msg:'the document id must be an ObjectId'"`
@@ -435,6 +376,11 @@ func (x *Controller) UpdateById(ctx context.Context, c *app.RequestContext) {
 	var dto UpdateByIdDto
 	if err := c.BindAndValidate(&dto); err != nil {
 		c.Error(err)
+		return
+	}
+
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
 		return
 	}
 
@@ -489,6 +435,11 @@ func (x *Controller) Replace(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
+		return
+	}
+
 	if err := x.Service.Transform(dto.Data, dto.Xdata); err != nil {
 		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
 		return
@@ -536,6 +487,11 @@ func (x *Controller) Delete(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
+		return
+	}
+
 	id, _ := primitive.ObjectIDFromHex(dto.Id)
 
 	if dto.Txn != "" {
@@ -561,15 +517,108 @@ func (x *Controller) Delete(ctx context.Context, c *app.RequestContext) {
 	c.JSON(http.StatusOK, r)
 }
 
-// Transaction
-// @router /transaction [POST]
-func (x *Controller) Transaction(ctx context.Context, c *app.RequestContext) {
-	txn := uuid.New().String()
-	if err := x.Service.Transaction(ctx, txn); err != nil {
+type BulkDeleteDto struct {
+	Collection string `path:"collection,required" vd:"regexp('^[a-z_]+$');msg:'the collection name must be lowercase letters with underscores'"`
+	Filter     M      `json:"filter,required" vd:"len($)>0;msg:'the filter cannot be empty'"`
+	Xfilter    M      `json:"xfilter"`
+	Txn        string `json:"txn"`
+}
+
+// BulkDelete
+// @router /:collection/bulk_delete [POST]
+func (x *Controller) BulkDelete(ctx context.Context, c *app.RequestContext) {
+	var dto BulkDeleteDto
+	if err := c.BindAndValidate(&dto); err != nil {
 		c.Error(err)
 		return
 	}
 
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
+		return
+	}
+
+	if err := x.Service.Transform(dto.Filter, dto.Xfilter); err != nil {
+		c.Error(errors.New(err, errors.ErrorTypePublic, nil))
+		return
+	}
+
+	if dto.Txn != "" {
+		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+			Action: "bulk_delete",
+			Name:   dto.Collection,
+			Filter: dto.Filter,
+		}); err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.Status(http.StatusNoContent)
+		return
+	}
+
+	r, err := x.Service.BulkDelete(ctx, dto.Collection, dto.Filter)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, r)
+}
+
+type SortDto struct {
+	Collection string      `path:"collection,required" vd:"regexp('^[a-z_]+$');msg:'the collection name must be lowercase letters with underscores'"`
+	Data       SortDtoData `json:"data,required"`
+	Txn        string      `json:"txn"`
+}
+
+type SortDtoData struct {
+	Key    string               `json:"key,required"`
+	Values []primitive.ObjectID `json:"values,required" vd:"len($)>0;msg:'the submission data must be an array of ObjectId'"`
+}
+
+// Sort
+// @router /:collection/sort [POST]
+func (x *Controller) Sort(ctx context.Context, c *app.RequestContext) {
+	var dto SortDto
+	if err := c.BindAndValidate(&dto); err != nil {
+		c.Error(err)
+		return
+	}
+
+	if x.IsForbid(dto.Collection) {
+		c.Error(ErrCollectionForbidden)
+		return
+	}
+
+	if dto.Txn != "" {
+		if err := x.Service.Pending(ctx, dto.Txn, PendingDto{
+			Action: "sort",
+			Name:   dto.Collection,
+			Data:   dto.Data,
+		}); err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.Status(http.StatusNoContent)
+		return
+	}
+
+	_, err := x.Service.Sort(ctx, dto.Collection, dto.Data.Key, dto.Data.Values)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+// Transaction
+// @router /transaction [POST]
+func (x *Controller) Transaction(ctx context.Context, c *app.RequestContext) {
+	txn := uuid.New().String()
+	x.Service.Transaction(ctx, txn)
 	c.JSON(http.StatusCreated, utils.H{
 		"txn": txn,
 	})
