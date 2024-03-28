@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { App, ConfigProvider, Layout } from 'antd';
+import type { Metadata } from 'next';
+
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
