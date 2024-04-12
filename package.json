@@ -1,31 +1,43 @@
 {
-  "name": "tiny-cms",
-  "version": "0.1.0",
+  "name": "tinycms",
   "scripts": {
-    "start": "next dev -H 0.0.0.0 -p 4200 --turbo",
+    "dev": "next dev --turbo",
     "build": "next build",
-    "serve": "next start"
+    "start": "next start",
+    "db:generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev -n update",
+    "migrate:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.3.6",
     "@ant-design/nextjs-registry": "^1.0.0",
+    "@aws-sdk/client-s3": "^3.554.0",
     "@node-rs/argon2": "^1.8.0",
-    "@prisma/client": "^5.11.0",
-    "antd": "^5.15.4",
+    "@prisma/client": "^5.12.1",
+    "antd": "^5.16.1",
+    "crypto-js": "^4.2.0",
+    "date-fns": "^3.6.0",
+    "nanoid": "^5.0.6",
     "next": "14.1.4",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "swr": "^2.2.5"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^20.11.30",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.19",
     "eslint": "^8",
     "eslint-config-next": "14.1.4",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-prettier": "^5.1.3",
+    "postcss": "^8.4.38",
     "prettier": "^3.2.5",
-    "prisma": "^5.11.0",
+    "prisma": "^5.12.1",
+    "tailwindcss": "^3.4.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.3"
   }
