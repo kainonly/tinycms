@@ -18,7 +18,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@bootstrap": ["./bootstrap"],
+      "@dashboard": ["./app/(dashboard)/_shared"],
+      "@dashboard/*": ["./app/(dashboard)/_shared/*"],
+      "@web": ["./app/(web)/_shared"],
+      "@web/*": ["./app/(web)/_shared/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

@@ -1,0 +1,5 @@
+.content {
+  background-size: 100%;
+  background: #fff url('/images/login-bg.svg') no-repeat center;
+  flex: 1 1 auto;
+}

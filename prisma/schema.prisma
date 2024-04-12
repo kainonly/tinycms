@@ -20,5 +20,57 @@ model User {
   avatar     String?  @db.VarChar
   phone      String?  @db.VarChar
 
-  @@map("user")
+  @@map("users")
+}
+
+model Menu {
+  id     Int     @id @default(autoincrement())
+  slug   String  @unique @db.VarChar(20)
+  name   String  @db.VarChar(20)
+  sider  Boolean @default(false)
+  route  String  @default("") @db.VarChar(20)
+  weight Int     @default(0)
+  posts  Post[]
+
+  @@index([slug])
+  @@map("menus")
+}
+
+enum Render {
+  page
+  catalog
+  gallery
+  customize
+}
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  cid         Int
+  create_time DateTime @default(now())
+  update_time DateTime @updatedAt
+  status      Boolean  @default(true)
+  parent      Int      @default(0)
+  name        String   @db.VarChar(50)
+  summary     String   @default("") @db.VarChar(100)
+  thumbnail   String   @default("") @db.VarChar
+  render      Render
+  customize   String   @default("") @db.VarChar(20)
+  slug        String   @db.VarChar(20)
+  menu        Menu     @relation(fields: [slug], references: [slug])
+  content     Content  @relation(fields: [cid], references: [id])
+  weight      Int      @default(0)
+
+  @@index([name])
+  @@index([cid])
+  @@index([slug])
+  @@map("posts")
+}
+
+model Content {
+  id       Int    @id @default(autoincrement())
+  html     String @db.Text
+  metadata Json   @default("{}")
+  post     Post[]
+
+  @@map("contents")
 }
