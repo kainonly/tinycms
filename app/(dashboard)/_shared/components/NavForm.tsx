@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { NavDto } from '@dashboard';
 import { Post } from '@prisma/client';
 import { Col, Form, Input, Row, Select, Switch, TreeSelect } from 'antd';
 import { FormInstance } from 'antd/es/form/hooks/useForm';
 import useSWR from 'swr';
+
+import { NavDto } from '@dashboard';
 
 interface Node {
   value: number;

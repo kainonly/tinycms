@@ -5,6 +5,10 @@ export const config = {
   name: process.env.NAME as string,
   key: process.env.KEY as string,
   public_url: process.env.PUBLIC_URL as string,
+  admin: {
+    user: process.env.ADMIN_USER as string,
+    token: Buffer.from(process.env.ADMIN_TOKEN as string, 'base64')
+  },
   s3: {
     accessKeyId: process.env.S3_ACCESSKEYID as string,
     secretAccessKey: process.env.S3_SECRETACCESSKEY as string,

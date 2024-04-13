@@ -1,0 +1,42 @@
+@tailwind base;
+
+@font-face {
+  font-family: AlibabaPuHuiTi;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/AlibabaPuHuiTi-3-45-Light.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: AlibabaPuHuiTi;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/AlibabaPuHuiTi-3-55-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: AlibabaPuHuiTi;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/AlibabaPuHuiTi-3-65-Medium.woff2') format('woff2');
+}
+
+.mce-content-body {
+  font-family: AlibabaPuHuiTi, system-ui;
+  font-size: 12pt;
+}
+
+.mce-content-body p {
+  text-indent: 2em;
+}
+
+.mce-content-body h1 {
+  text-indent: 0.5em;
+  color: #fff;
+  font-weight: bold;
+  display: inline-block;
+  font-size: 16pt;
+  padding: 8px 24px;
+  border-radius: 48px;
+  background: linear-gradient(#f4b5be, #e77979);
+}

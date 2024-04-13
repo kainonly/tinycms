@@ -8,7 +8,7 @@ import zhCN from 'antd/locale/zh_CN';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: ''
+  title: 'CMS 管理'
 };
 
 interface Prop {
