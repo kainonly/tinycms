@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { Detail, Nav, PostContext, PostDto } from '@dashboard';
 import { FloatButton, Form, Layout, theme } from 'antd';
 import useSWR from 'swr';
+
+import { Detail, Nav, PostContext, PostDto } from '@dashboard';
 
 const { Sider, Content } = Layout;
 
