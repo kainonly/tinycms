@@ -4,7 +4,9 @@
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
+    "pwd:generate": "ts-node prisma/generate.ts",
     "db:generate": "prisma generate",
+    "db:seed": "ts-node prisma/seed.ts",
     "migrate:dev": "prisma migrate dev -n update",
     "migrate:reset": "prisma migrate reset"
   },

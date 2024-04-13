@@ -9,20 +9,6 @@ datasource db {
   relationMode = "prisma"
 }
 
-model User {
-  id         Int      @id @default(autoincrement())
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  status     Boolean  @default(true)
-  email      String   @unique @db.VarChar
-  password   String   @db.VarChar
-  name       String?  @db.VarChar
-  avatar     String?  @db.VarChar
-  phone      String?  @db.VarChar
-
-  @@map("users")
-}
-
 model Menu {
   id     Int     @id @default(autoincrement())
   slug   String  @unique @db.VarChar(20)

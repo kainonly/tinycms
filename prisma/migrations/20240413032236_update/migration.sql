@@ -2,21 +2,6 @@
 CREATE TYPE "Render" AS ENUM ('page', 'catalog', 'gallery', 'customize');
 
 -- CreateTable
-CREATE TABLE "users" (
-    "id" SERIAL NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "status" BOOLEAN NOT NULL DEFAULT true,
-    "email" VARCHAR NOT NULL,
-    "password" VARCHAR NOT NULL,
-    "name" VARCHAR,
-    "avatar" VARCHAR,
-    "phone" VARCHAR,
-
-    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "menus" (
     "id" SERIAL NOT NULL,
     "slug" VARCHAR(20) NOT NULL,
@@ -55,9 +40,6 @@ CREATE TABLE "contents" (
 
     CONSTRAINT "contents_pkey" PRIMARY KEY ("id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "menus_slug_key" ON "menus"("slug");

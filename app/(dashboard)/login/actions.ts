@@ -1,9 +1,10 @@
 'use server';
 
-import { config, db } from '@bootstrap';
 import { verify } from '@node-rs/argon2';
 import { AES } from 'crypto-js';
 import { cookies } from 'next/headers';
+
+import { config } from '@bootstrap';
 
 export type LoginDto = {
   username: string;
@@ -11,13 +12,13 @@ export type LoginDto = {
 };
 
 export async function login(dto: LoginDto): Promise<boolean> {
-  const data = await db.user.findUnique({ where: { email: dto.username, status: true } });
-  if (!data) {
+  if (dto.username !== config.admin.user) {
     return false;
   }
-  const check = await verify(data.password, dto.password);
+  const check = await verify(config.admin.token, dto.password);
   if (check) {
-    const encrypted = AES.encrypt(data.email, config.key).toString();
+    const session = JSON.stringify({ user: config.admin.user });
+    const encrypted = AES.encrypt(session, config.key).toString();
     cookies().set('session', encrypted, {
       secure: config.production,
       path: '/',

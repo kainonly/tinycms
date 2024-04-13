@@ -1,16 +1,11 @@
 import { createContext } from 'react';
 
 import { Content, Menu, Post } from '@prisma/client';
-import { App } from 'antd';
 import { FormInstance } from 'antd/es/form/hooks/useForm';
 import { SWRResponse } from 'swr';
 
 export type Nav = Pick<Post, 'id' | 'parent' | 'name' | 'render'>;
 export type NavDto = Pick<Post, 'parent' | 'name' | 'slug' | 'render' | 'customize' | 'status'>;
-export interface Event {
-  name: string;
-  value: any;
-}
 
 export interface Config {
   public_url: string;
