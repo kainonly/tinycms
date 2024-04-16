@@ -4,8 +4,8 @@ import { Content, Menu, Post } from '@prisma/client';
 import { FormInstance } from 'antd/es/form/hooks/useForm';
 import { SWRResponse } from 'swr';
 
-export type Nav = Pick<Post, 'id' | 'parent' | 'name' | 'render'>;
-export type NavDto = Pick<Post, 'parent' | 'name' | 'slug' | 'render' | 'customize' | 'status'>;
+export type NavDto = Pick<Post, 'id' | 'parent' | 'name' | 'render'>;
+export type NavFormDto = Pick<Post, 'parent' | 'name' | 'slug' | 'render' | 'customize' | 'status'>;
 
 export interface Config {
   public_url: string;
@@ -22,7 +22,7 @@ export type Detail = Pick<Post, 'create_time' | 'update_time'>;
 export type PostDto = Post & { content: Content };
 
 export interface PostContextType {
-  navs: SWRResponse<Nav[], any, any>;
+  navs: SWRResponse<NavDto[], any, any>;
   collapsed: boolean;
   setCollapsed: (_: boolean) => void;
   detail: Detail | null;

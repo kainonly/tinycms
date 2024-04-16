@@ -3,25 +3,29 @@
 import React, { useState } from 'react';
 
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { FloatButton, Form, Layout, theme } from 'antd';
+import { Empty, FloatButton, Form, Layout, theme } from 'antd';
+import { useParams } from 'next/navigation';
 import useSWR from 'swr';
 
-import { Detail, Nav, PostContext, PostDto } from '@dashboard';
+import { Detail, NavDto, PostContext, PostDto } from '@dashboard';
+
+import { Control } from './control';
+import { Nav } from './nav';
 
 const { Sider, Content } = Layout;
 
 interface Prop {
   children: React.ReactNode;
-  nav: React.ReactNode;
-  control: React.ReactNode;
-  params: { slug: string };
 }
 
-export default function NextLayout({ children, nav, control, params }: Prop) {
+export default function NextLayout({ children }: Prop) {
+  const params = useParams<{ slug: string; id?: string }>();
   const {
     token: { colorBgContainer }
   } = theme.useToken();
-  const navs = useSWR<Nav[], any, string>(`/api/posts?slug=${params.slug}`, url => fetch(url).then(res => res.json()));
+  const navs = useSWR<NavDto[], any, string>(`/api/posts?slug=${params.slug}`, url =>
+    fetch(url).then(res => res.json())
+  );
   const [collapsed, setCollapsed] = useState(false);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [form] = Form.useForm<PostDto>();
@@ -45,7 +49,7 @@ export default function NextLayout({ children, nav, control, params }: Prop) {
           }}
           width={320}
         >
-          {nav}
+          <Nav {...params} />
         </Sider>
         <Content style={{ padding: '24px 24px 0 24px', overflowY: 'auto', overflowX: 'hidden' }}>{children}</Content>
         <Sider
@@ -64,7 +68,7 @@ export default function NextLayout({ children, nav, control, params }: Prop) {
             setCollapsed(broken);
           }}
         >
-          {control}
+          {params.id ? <Control /> : <Empty style={{ marginTop: '2.5rem' }} />}
         </Sider>
       </Layout>
       <FloatButton

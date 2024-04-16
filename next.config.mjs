@@ -6,11 +6,6 @@ const nextConfig = {
         source: '/admin',
         destination: '/admin/overview',
         permanent: false
-      },
-      {
-        source: '/admin/:slug',
-        destination: '/admin/:slug/_',
-        permanent: false
       }
     ];
   },

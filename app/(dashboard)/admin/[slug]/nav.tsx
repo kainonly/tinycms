@@ -1,7 +1,7 @@
-'use client';
 /* eslint-disable react/no-children-prop */
+'use client';
 
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   AimOutlined,
@@ -16,23 +16,11 @@ import {
   SearchOutlined,
   SubnodeOutlined
 } from '@ant-design/icons';
-import {
-  App,
-  AutoComplete,
-  Button,
-  Divider,
-  Dropdown,
-  Empty,
-  Flex,
-  Input,
-  Space,
-  Tooltip,
-  Tree,
-  TreeDataNode
-} from 'antd';
+import { App, AutoComplete, Button, Divider, Empty, Flex, Input, Space, Tooltip, Tree, TreeDataNode } from 'antd';
+import Dropdown from 'antd/es/dropdown/dropdown';
 import { useRouter } from 'next/navigation';
 
-import { VContext, Nav, NavDto, PostContext } from '@dashboard';
+import { NavDto, NavFormDto, PostContext, VContext } from '@dashboard';
 import { NavForm } from '@dashboard/components';
 import { useModalForm } from '@dashboard/hooks';
 
@@ -40,7 +28,7 @@ import { create, del, setRoute, sort, update } from './actions';
 
 interface Node extends TreeDataNode {
   parent?: Node;
-  data: Nav;
+  data: NavDto;
 }
 
 interface SearchOption {
@@ -49,19 +37,19 @@ interface SearchOption {
 }
 
 interface Prop {
-  params: { slug: string; id: string };
+  slug: string;
+  id?: string;
 }
 
-export default function Page({ params }: Prop) {
+export function Nav({ slug, id }: Prop) {
   const router = useRouter();
   const { message, modal } = App.useApp();
-  const form = useModalForm<NavDto>(f => <NavForm slug={params.slug} f={f} />);
+  const form = useModalForm<NavFormDto>(f => <NavForm slug={slug} f={f} />);
   const { navs } = useContext(PostContext)!;
-  const { data, mutate, error } = navs;
-
+  const { data, mutate } = navs;
   let selectedKeys: React.Key[] = [];
-  if (!(params.id === '_' || error)) {
-    selectedKeys = [parseInt(params.id)];
+  if (id) {
+    selectedKeys = [parseInt(id)];
   }
   const nodes = useMemo<Node[]>(() => {
     const values: Node[] = [];
@@ -70,7 +58,7 @@ export default function Page({ params }: Prop) {
       return [];
     }
     for (const x of data) {
-      dict[x.id] = { key: x.id, title: x.name, data: x, children: [] };
+      dict[x.id] = { key: x.id, title: x.name, data: x, selectable: false, children: [] };
     }
     for (const x of data!) {
       const node = dict[x.id]!;
@@ -101,9 +89,8 @@ export default function Page({ params }: Prop) {
 
   const { menus } = useContext(VContext)!;
   const def = useMemo(() => {
-    return menus.data?.find(v => v.slug === params.slug)!.route ?? '';
-  }, [menus.data, params.slug]);
-
+    return menus.data?.find(v => v.slug === slug)!.route ?? '';
+  }, [menus.data, slug]);
   return (
     <div ref={ref} style={{ height: '100%' }}>
       <Space align={'center'}>
@@ -124,12 +111,12 @@ export default function Page({ params }: Prop) {
             if (!text) {
               return;
             }
-            const response = await fetch(`/api/posts?slug=${params.slug}&name=${text}`);
-            const data = (await response.json()) as Nav[];
+            const response = await fetch(`/api/posts?slug=${slug}&name=${text}`);
+            const data = (await response.json()) as NavDto[];
             setOptions(data.map<SearchOption>(v => ({ label: v.name, value: v.id.toString() })));
           }}
           onSelect={(value: string) => {
-            router.push(`/admin/${params.slug}/${value}`);
+            router.push(`/admin/${slug}/${value}`);
           }}
         />
         <Button
@@ -155,10 +142,17 @@ export default function Page({ params }: Prop) {
         blockNode={true}
         showIcon={true}
         showLine={true}
-        defaultSelectedKeys={selectedKeys}
+        selectedKeys={selectedKeys}
         draggable={{ icon: false }}
         titleRender={v => (
-          <Flex align={'center'} style={{ paddingLeft: '0.5rem' }}>
+          <Flex
+            align={'center'}
+            style={{ paddingLeft: '0.5rem' }}
+            onClick={e => {
+              e.preventDefault();
+              router.push(`/admin/${slug}/${v.key}`);
+            }}
+          >
             <Dropdown
               trigger={['contextMenu']}
               menu={{
@@ -209,7 +203,7 @@ export default function Page({ params }: Prop) {
                         okText: '是的',
                         cancelText: '再想想',
                         onOk: async () => {
-                          await setRoute(params.slug, String(v.key));
+                          await setRoute(slug, String(v.key));
                           message.success('更新成功');
                           menus.mutate();
                         }
@@ -233,7 +227,7 @@ export default function Page({ params }: Prop) {
                             okText: '是的',
                             cancelText: '再想想',
                             onOk: async () => {
-                              await setRoute(params.slug, '');
+                              await setRoute(slug, '');
                               message.success('更新成功');
                               menus.mutate();
                             }
@@ -266,7 +260,13 @@ export default function Page({ params }: Prop) {
               }}
             >
               <div
-                style={{ width: '100%', height: 48, whiteSpace: 'wrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                style={{
+                  width: '100%',
+                  height: 48,
+                  whiteSpace: 'wrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
               >
                 <b>{v.title as string}</b>
                 {String(v.data.id) === def && (
@@ -294,9 +294,6 @@ export default function Page({ params }: Prop) {
           </Flex>
         )}
         treeData={nodes}
-        onSelect={(keys, { node }) => {
-          router.push(`/admin/${params.slug}` + (keys.length !== 0 ? `/${node.key}` : ''));
-        }}
         onDrop={async ({ dragNode, node, dropPosition }) => {
           const dragKey = dragNode.key;
           const dragPos = dragNode.pos.split('-');
