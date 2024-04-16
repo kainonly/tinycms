@@ -6,7 +6,7 @@ import { Col, Form, Input, Row, Select, Switch, TreeSelect } from 'antd';
 import { FormInstance } from 'antd/es/form/hooks/useForm';
 import useSWR from 'swr';
 
-import { NavDto } from '@dashboard';
+import { NavFormDto } from '@dashboard';
 
 interface Node {
   value: number;
@@ -19,7 +19,7 @@ interface Props<T> {
   f: FormInstance<T>;
 }
 
-export function NavForm<T extends NavDto>({ slug, f }: Props<T>) {
+export function NavForm<T extends NavFormDto>({ slug, f }: Props<T>) {
   const { data } = useSWR<Post[], any, string>(`/api/posts?slug=${slug}`, url => fetch(url).then(res => res.json()));
   const nodes = useMemo<Node[]>(() => {
     const values: Node[] = [];

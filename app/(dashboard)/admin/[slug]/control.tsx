@@ -1,19 +1,15 @@
 'use client';
 
-import React, { useContext, useState } from 'react';
+import { useContext, useState } from 'react';
 
 import { CheckOutlined, CloseOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { Collapse, Divider, Empty, Form, Input, Select, Switch, Upload, Image, Button, Space } from 'antd';
+import { Collapse, Divider, Form, Input, Select, Switch, Upload, Image, Button, Space } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { format } from 'date-fns';
 
 import { PostContext, PostDto, VContext } from '@dashboard';
 
-interface Prop {
-  params: { slug: string; id: string };
-}
-
-export default function Page({ params }: Prop) {
+export function Control() {
   const { config } = useContext(VContext)!;
   const { collapsed, form, detail } = useContext(PostContext)!;
 
@@ -21,7 +17,7 @@ export default function Page({ params }: Prop) {
   const thumbnail = Form.useWatch(values => values.thumbnail, form);
   const [uploading, setUploading] = useState(false);
 
-  return params.id !== '_' ? (
+  return (
     <div style={{ height: '100%', overflowY: 'auto' }}>
       <Form<PostDto> hidden={collapsed} form={form} layout={'vertical'}>
         <Form.Item label="名称" name={'name'}>
@@ -120,7 +116,5 @@ export default function Page({ params }: Prop) {
         </Form.Item>
       </Form>
     </div>
-  ) : (
-    <Empty style={{ marginTop: '2.5rem' }} />
   );
 }

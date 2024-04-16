@@ -3,9 +3,9 @@
 import { Prisma } from '@prisma/client';
 
 import { db } from '@bootstrap';
-import { NavDto } from '@dashboard';
+import { NavFormDto } from '@dashboard';
 
-export async function create(data: NavDto) {
+export async function create(data: NavFormDto) {
   const result = await db.post.create({
     data: {
       parent: data.parent,

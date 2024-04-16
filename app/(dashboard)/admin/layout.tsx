@@ -10,7 +10,7 @@ import useSWR from 'swr';
 
 import { VContext, Config } from '@dashboard';
 
-import { updateSider } from './[slug]/@nav/[id]/actions';
+import { updateSider } from './[slug]/actions';
 import { logout } from './actions';
 
 const { Header } = Layout;
@@ -66,7 +66,7 @@ export default function NextLayout({ children }: Prop) {
               items={items}
               defaultSelectedKeys={[segment as string]}
               onSelect={({ key }) => {
-                router.push(`/admin/${key}/_`);
+                router.push(`/admin/${key}`);
               }}
             />
           </Col>
