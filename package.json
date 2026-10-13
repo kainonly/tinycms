@@ -1,6 +1,6 @@
 {
   "name": "ngx-wangeditor-next",
-  "version": "0.1.0",
+  "version": "22.2.0",
   "scripts": {
     "build": "ng build editor --configuration production",
     "watch": "ng build editor --watch --configuration development",
