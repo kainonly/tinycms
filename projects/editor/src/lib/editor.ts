@@ -2,12 +2,12 @@ import { isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   forwardRef,
   inject,
   input,
-  NgZone,
   OnDestroy,
   output,
   PLATFORM_ID,
@@ -36,7 +36,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NgxWangEditor implements ControlValueAccessor, AfterViewInit, OnDestroy {
-  private readonly zone = inject(NgZone);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly loadEditor = inject(EDITOR_LOADER);
   private readonly toolbarRef = viewChild.required<ElementRef<HTMLElement>>('toolbar');
@@ -85,8 +85,7 @@ export class NgxWangEditor implements ControlValueAccessor, AfterViewInit, OnDes
     else this.editor?.enable();
   }
   ngAfterViewInit(): void {
-    if (isPlatformBrowser(this.platformId))
-      void this.zone.runOutsideAngular(() => this.initialize());
+    if (isPlatformBrowser(this.platformId)) void this.initialize();
   }
   ngOnDestroy(): void {
     this.destroyed = true;
@@ -108,22 +107,20 @@ export class NgxWangEditor implements ControlValueAccessor, AfterViewInit, OnDes
           onChange: (editor) => {
             if (this.destroyed || this.writing) return;
             const html = editor.getHtml();
-            this.zone.run(() => {
-              if (html !== this.value) {
-                this.value = html;
-                this.onChange(html);
-                this.htmlChange.emit(html);
-              }
-              config.onChange?.(editor);
-            });
+            if (html !== this.value) {
+              this.value = html;
+              this.onChange(html);
+              this.changeDetector.markForCheck();
+              this.htmlChange.emit(html);
+            }
+            config.onChange?.(editor);
           },
           onBlur: (editor) => {
             if (this.destroyed) return;
-            this.zone.run(() => {
-              this.onTouched();
-              this.blurred.emit();
-              config.onBlur?.(editor);
-            });
+            this.onTouched();
+            this.changeDetector.markForCheck();
+            this.blurred.emit();
+            config.onBlur?.(editor);
           },
           MENU_CONF: this.upload() ? this.uploadConfig(config) : config.MENU_CONF,
         },
@@ -136,10 +133,10 @@ export class NgxWangEditor implements ControlValueAccessor, AfterViewInit, OnDes
         mode: this.mode(),
       });
       if (this.disabled) this.editor.disable();
-      this.zone.run(() => this.created.emit(this.editor!));
+      this.created.emit(this.editor);
     } catch (error) {
       this.destroyEditor();
-      if (!this.destroyed) this.zone.run(() => this.editorError.emit(error));
+      if (!this.destroyed) this.editorError.emit(error);
     }
   }
   private uploadConfig(config: Partial<IEditorConfig>): IEditorConfig['MENU_CONF'] {
@@ -174,19 +171,17 @@ export class NgxWangEditor implements ControlValueAccessor, AfterViewInit, OnDes
     if (!handler) return;
     this.updatePending(1);
     try {
-      const result = await this.zone.run(() => handler(file, kind));
+      const result = await handler(file, kind);
       if (!this.destroyed) insert(typeof result === 'string' ? { url: result } : result);
     } catch (error) {
-      if (!this.destroyed) this.zone.run(() => this.uploadError.emit({ file, kind, error }));
+      if (!this.destroyed) this.uploadError.emit({ file, kind, error });
     } finally {
       this.updatePending(-1);
     }
   }
   private updatePending(delta: number): void {
-    this.zone.run(() => {
-      this.pendingState.update((value) => value + delta);
-      if (!this.destroyed) this.pendingChange.emit(this.pendingState());
-    });
+    this.pendingState.update((value) => value + delta);
+    if (!this.destroyed) this.pendingChange.emit(this.pendingState());
   }
   private destroyEditor(): void {
     try {

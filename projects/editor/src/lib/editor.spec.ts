@@ -1,11 +1,16 @@
-import { Component, PLATFORM_ID } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  PLATFORM_ID,
+  provideZonelessChangeDetection,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import type { IDomEditor, Toolbar } from '@wangeditor-next/editor';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { NgxWangEditor } from './editor';
-import { EDITOR_LOADER, EditorEngine } from './types';
+import { EDITOR_LOADER, EditorEngine, EditorUploadHandler } from './types';
 
 type Options = NonNullable<Parameters<EditorEngine['createEditor']>[0]>;
 function deferred<T>() {
@@ -49,12 +54,39 @@ class FormHost {
   readonly content = new FormControl('<p>初始正文</p>', { nonNullable: true });
 }
 
+@Component({
+  imports: [NgxWangEditor, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template:
+    '<ngx-wangeditor-next [formControl]="content" /><span class="value">{{ content.value }}</span><span class="touched">{{ content.touched }}</span>',
+})
+class ZonelessHost {
+  readonly content = new FormControl('<p>初始正文</p>', { nonNullable: true });
+}
+
+@Component({
+  imports: [NgxWangEditor],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <ngx-wangeditor-next #editor [upload]="upload" (uploadError)="error = $event.error" />
+    <span class="pending">{{ editor.pending() }}</span>
+    <span class="error">{{ error }}</span>
+  `,
+})
+class UploadHost {
+  upload: EditorUploadHandler = async () => '';
+  error: unknown = '';
+}
+
 describe('NgxWangEditor', () => {
   let mock: ReturnType<typeof mockEngine>;
   beforeEach(() => {
     mock = mockEngine();
     TestBed.configureTestingModule({
-      providers: [{ provide: EDITOR_LOADER, useValue: () => Promise.resolve(mock.engine) }],
+      providers: [
+        provideZonelessChangeDetection(),
+        { provide: EDITOR_LOADER, useValue: () => Promise.resolve(mock.engine) },
+      ],
     });
   });
   afterEach(() => TestBed.resetTestingModule());
@@ -103,6 +135,20 @@ describe('NgxWangEditor', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(editor.getHtml()).toBe('<p>外部正文</p>');
     expect(changed).not.toHaveBeenCalled();
+  });
+
+  it('zoneless 下仅绑定表单也会更新父级 OnPush 页面中的值和 touched 展示', async () => {
+    const fixture = TestBed.createComponent(ZonelessHost);
+    await fixture.whenStable();
+    mock.editor.setHtml('<p>异步输入</p>');
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.value').textContent).toBe('<p>异步输入</p>');
+    mock.editor.setHtml('<p>再次输入</p>');
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.value').textContent).toBe('<p>再次输入</p>');
+    mock.options().config?.onBlur?.(mock.editor as unknown as IDomEditor);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.touched').textContent).toBe('true');
   });
 
   it('加载未完成时保留最新值和禁用状态', async () => {
@@ -189,6 +235,21 @@ describe('NgxWangEditor', () => {
     expect(received).toHaveBeenCalledWith({ error, file, kind: 'image' });
     expect(insert).not.toHaveBeenCalled();
     expect(fixture.componentInstance.pending()).toBe(0);
+  });
+
+  it('zoneless 下异步上传计数和失败事件自动刷新 OnPush 页面', async () => {
+    const task = deferred<string>();
+    const fixture = TestBed.createComponent(UploadHost);
+    fixture.componentInstance.upload = () => task.promise;
+    await fixture.whenStable();
+    const upload = startUpload('image', new File(['x'], 'x.png'), vi.fn());
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.pending').textContent).toBe('1');
+    task.reject(new Error('上传失败'));
+    await upload;
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.pending').textContent).toBe('0');
+    expect(fixture.nativeElement.querySelector('.error').textContent).toContain('上传失败');
   });
 
   it('销毁后不插入迟到的上传结果，并清理工具栏和编辑器', async () => {
