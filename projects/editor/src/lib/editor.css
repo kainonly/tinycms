@@ -1,0 +1,39 @@
+ngx-wangeditor-next {
+  display: block;
+}
+ngx-wangeditor-next .editor-shell {
+  --w-e-toolbar-bg-color: var(--editor-toolbar-background, #fafafa);
+  --w-e-toolbar-color: var(--editor-toolbar-color, #595959);
+  --w-e-toolbar-border-color: var(--editor-border-color, #d9d9d9);
+  --w-e-toolbar-active-color: var(--editor-primary-color, #1677ff);
+  --w-e-toolbar-active-bg-color: var(--editor-active-background, #e6f4ff);
+  --w-e-textarea-border-color: var(--editor-border-color, #d9d9d9);
+  --w-e-textarea-handler-bg-color: var(--editor-primary-color, #1677ff);
+  --w-e-textarea-selected-border-color: var(--editor-primary-color, #1677ff);
+  border: 1px solid var(--editor-border-color, #d9d9d9);
+  background: var(--editor-background, #fff);
+}
+ngx-wangeditor-next .editor-shell:focus-within {
+  border-color: var(--editor-primary-color, #1677ff);
+  box-shadow: 0 0 0 2px var(--editor-active-background, #e6f4ff);
+}
+ngx-wangeditor-next .editor-toolbar {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--editor-border-color, #d9d9d9);
+  background: var(--editor-toolbar-background, #fafafa);
+}
+ngx-wangeditor-next .w-e-toolbar {
+  background: transparent;
+}
+ngx-wangeditor-next .editor-body {
+  min-height: var(--editor-min-height, 400px);
+}
+ngx-wangeditor-next .w-e-text-container [data-slate-editor],
+ngx-wangeditor-next .w-e-text-container .w-e-text-placeholder {
+  font-size: var(--editor-font-size, 14px);
+  line-height: var(--editor-line-height, 1.5);
+}
+ngx-wangeditor-next .w-e-text-container .w-e-text-placeholder {
+  top: 16px;
+  font-style: normal;
+}

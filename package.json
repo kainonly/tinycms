@@ -1,0 +1,36 @@
+{
+  "name": "ngx-wangeditor-next",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "ng build editor --configuration production",
+    "watch": "ng build editor --watch --configuration development",
+    "test": "ng test editor --watch=false",
+    "check": "tsc --noEmit -p projects/editor/tsconfig.lib.json",
+    "format:check": "prettier --check projects scripts",
+    "pack": "npm run build && npm pack ./dist/editor --pack-destination ./dist",
+    "check:package": "npm run pack && node scripts/check-package.mjs"
+  },
+  "private": true,
+  "packageManager": "npm@12.0.2",
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "@wangeditor-next/editor": "^6.5.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.2",
+    "@angular/cli": "^22.2.2",
+    "@angular/compiler-cli": "^22.2.0",
+    "jsdom": "^30.0.0",
+    "ng-packagr": "^22.2.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "vitest": "^5.0.0"
+  }
+}
