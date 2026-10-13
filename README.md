@@ -1,97 +1,123 @@
 # ngx-wangeditor-next
 
-Angular 22 standalone 富文本编辑器组件，基于 `@wangeditor-next/editor` 6.5。支持 Angular 表单、自定义图片与视频上传、工具栏配置和主题定制，采用 MIT 许可证。上传服务及消息提示由使用者提供。
+Angular 22.2+ 富文本编辑器组件，支持表单绑定、图片与视频上传、工具栏配置和主题设置。
 
-## 本地开发
+## 安装
 
-```sh
-npm install
-npm run watch
-```
-
-在另一个终端执行验证：
-
-```sh
-npm run build
-npm test
-npm run check
-npm run format:check
-npm run check:package
-```
-
-`npm run pack` 生成 `dist/ngx-wangeditor-next-0.1.0.tgz`；`check:package` 实际将包安装到临时项目，验证无 DOM 导入和 Angular AOT 编译。暂未发布到 npm。
-
-## 安装与样式
+安装打包后的 npm 文件及编辑器依赖：
 
 ```sh
 npm install /path/to/ngx-wangeditor-next-0.1.0.tgz @wangeditor-next/editor
 ```
 
-Angular 应用在全局样式中引入引擎样式：
+在应用的全局样式中引入：
 
 ```css
 @import '@wangeditor-next/editor/dist/css/style.css';
 ```
 
-库自身携带外壳样式，不依赖 NG-ZORRO。Angular、Forms 和编辑器引擎都是 peerDependencies。图片和视频 HTML 保持 wangEditor-next 原有格式。
-
-## 表单使用
-
-在 standalone 组件的 `imports` 中加入 `NgxWangEditor` 和 `ReactiveFormsModule`。
+## 表单绑定
 
 ```ts
-import { FormControl } from '@angular/forms';
-import { NgxWangEditor, EditorUploadHandler, EditorUploadError } from 'ngx-wangeditor-next';
+import { Component } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { NgxWangEditor } from 'ngx-wangeditor-next';
 
-readonly content = new FormControl('', { nonNullable: true });
-readonly upload: EditorUploadHandler = (file, kind) => this.media.upload(file, kind);
-
-onUploadError(event: EditorUploadError): void {
-  this.message.error(event.error instanceof Error ? event.error.message : '上传失败');
+@Component({
+  selector: 'app-editor-demo',
+  imports: [ReactiveFormsModule, NgxWangEditor],
+  templateUrl: './editor-demo.html',
+})
+export class EditorDemo {
+  readonly content = new FormControl('', { nonNullable: true });
 }
 ```
+
+```html
+<ngx-wangeditor-next [formControl]="content" placeholder="请输入正文" />
+```
+
+读取、更新和禁用编辑器：
+
+```ts
+const html = this.content.value;
+this.content.setValue('<p>新的正文</p>');
+this.content.disable();
+this.content.enable();
+```
+
+也支持 `[(ngModel)]`，使用时在组件的 `imports` 中加入 `FormsModule`。
+
+## 图片与视频上传
+
+通过 `upload` 传入上传函数，参数 `kind` 为 `image` 或 `video`。函数返回 URL 字符串，或 `{ url, alt?, href?, poster? }`。
+
+在组件类中添加：
+
+```ts
+import { signal } from '@angular/core';
+import { EditorUploadHandler, EditorUploadError, UploadedMedia } from 'ngx-wangeditor-next';
+
+readonly pending = signal(0);
+readonly errorMessage = signal('');
+
+readonly upload: EditorUploadHandler = async (file, kind) => {
+  const body = new FormData();
+  body.append('file', file);
+  body.append('kind', kind);
+
+  const response = await fetch('/api/upload', { method: 'POST', body });
+  if (!response.ok) throw new Error('上传失败');
+  return (await response.json()) as UploadedMedia;
+};
+
+onUploadError(event: EditorUploadError): void {
+  this.errorMessage.set(event.error instanceof Error ? event.error.message : '上传失败');
+}
+
+onEditorError(error: unknown): void {
+  this.errorMessage.set(error instanceof Error ? error.message : '编辑器加载失败');
+}
+```
+
+将 `/api/upload` 替换为自己的接口。接口需返回包含 `url` 的 JSON，例如 `{ "url": "https://example.com/image.png" }`。
 
 ```html
 <ngx-wangeditor-next
   [formControl]="content"
   [upload]="upload"
-  placeholder="请输入正文，可直接上传图片或视频"
   (uploadError)="onUploadError($event)"
   (editorError)="onEditorError($event)"
   (pendingChange)="pending.set($event)"
 />
+<p>{{ errorMessage() }}</p>
 ```
 
-`media`、`message`、`pending` 和错误处理函数由应用提供。支持响应式表单和 `ngModel`；禁用状态由 Angular Forms 设置。父级写值不会回传为用户修改，失焦会标记 touched。
+`pending()` 可用于在上传期间禁用提交按钮。它仅统计通过 `upload` 函数执行的上传；不传 `upload` 时，可通过 `editorConfig` 使用引擎原生上传配置。
 
-## 公共 API
+## 编辑器与工具栏配置
 
-| 输入            | 说明                                               |
-| --------------- | -------------------------------------------------- |
-| `placeholder`   | 默认“请输入正文”                                   |
-| `mode`          | `default` 或 `simple`                              |
-| `editorConfig`  | wangEditor-next 的编辑器配置                       |
-| `toolbarConfig` | 工具栏配置                                         |
-| `upload`        | `(file, kind) => Promise<string \| UploadedMedia>` |
+```ts
+import { IEditorConfig, IToolbarConfig } from 'ngx-wangeditor-next';
 
-| 输出            | 说明                                        |
-| --------------- | ------------------------------------------- |
-| `created`       | 引擎和工具栏初始化完成后的编辑器实例        |
-| `htmlChange`    | 用户修改后的 HTML                           |
-| `blurred`       | 失焦                                        |
-| `uploadError`   | `{ file, kind, error }`，由应用决定提示方式 |
-| `editorError`   | 引擎加载或初始化错误                        |
-| `pendingChange` | 自定义上传处理器的进行中任务数量            |
+readonly editorConfig: Partial<IEditorConfig> = { maxLength: 10000 };
+readonly toolbarConfig: Partial<IToolbarConfig> = { excludeKeys: ['fullScreen'] };
+```
 
-`pending` 是只读 Signal。上传函数可返回 URL 字符串，或 `{ url, alt?, href?, poster? }`。不传 `upload` 时保留引擎的原生菜单配置；传入时接管图片/视频的 `customUpload`，保留各菜单的其他选项。`pending` 仅统计该处理器，不统计通过原生菜单配置完成的上传。
+```html
+<ngx-wangeditor-next
+  [formControl]="content"
+  mode="simple"
+  [editorConfig]="editorConfig"
+  [toolbarConfig]="toolbarConfig"
+/>
+```
 
-配置、mode、placeholder 在初始化时读取；需更换初始化配置时重建组件。上传处理器已接入的情况下，每次上传读取最新的 `upload` 输入。函数参数不能直接用未绑定的服务方法，建议用箭头函数适配。
+`mode` 可选 `default` 或 `simple`。配置和占位文字在初始化时读取，修改初始化配置时需重建组件。
 
-引擎通过 `EDITOR_LOADER` 在浏览器端动态加载。SSR 导入库和渲染外壳不会创建编辑器；这不代表 wangEditor 引擎本身可在服务端运行。销毁后不再创建实例、插入上传结果或输出错误，但库不会自动取消应用的上传请求。
+## 主题设置
 
-## 主题
-
-通过 CSS 自定义属性设置颜色和尺寸，无需依赖特定应用主题。
+在应用的全局样式中设置：
 
 ```css
 ngx-wangeditor-next {
@@ -105,12 +131,13 @@ ngx-wangeditor-next {
 }
 ```
 
-## 应用集成
+## 事件
 
-通过 `upload` 回调对接自建服务或对象存储。文件类型、大小限制和服务端授权由上传服务处理；通过 `uploadError` 和 `editorError` 对接应用的提示组件。
-
-需要等待上传完成再提交表单时，可使用 `pendingChange` 或组件的 `pending` Signal。不同应用可提供各自的上传实现和主题配置，无需修改库代码。
-
-## 许可证
-
-[MIT](LICENSE)
+| 事件            | 内容                               |
+| --------------- | ---------------------------------- |
+| `created`       | 初始化完成后的编辑器实例           |
+| `htmlChange`    | 修改后的 HTML                      |
+| `blurred`       | 编辑器失焦                         |
+| `uploadError`   | 上传失败的 `{ file, kind, error }` |
+| `editorError`   | 编辑器加载或初始化错误             |
+| `pendingChange` | 正在上传的任务数量                 |
