@@ -1,6 +1,6 @@
 # ngx-wangeditor-next
 
-面向 Angular 22.2+ zoneless 应用的富文本编辑器组件，无需 zone.js，支持表单绑定、图片与视频上传、工具栏配置和主题设置。
+基于 wangeditor-next 的 Angular 富文本编辑器组件，无需 zone.js（zoneless），支持表单绑定、图片与视频上传、工具栏配置和主题设置。
 
 ## 安装
 
