@@ -4,11 +4,13 @@
   "scripts": {
     "build": "ng build editor --configuration production",
     "watch": "ng build editor --watch --configuration development",
-    "test": "ng test editor --watch=false",
+    "test": "npm run build && ng test editor --watch=false && ng test demo --watch=false",
     "check": "tsc --noEmit -p projects/editor/tsconfig.lib.json",
-    "format:check": "prettier --check projects scripts",
+    "format:check": "prettier --check projects scripts src",
     "pack": "npm run build && npm pack ./dist/editor --pack-destination ./dist",
-    "check:package": "npm run pack && node scripts/check-package.mjs"
+    "check:package": "npm run pack && node scripts/check-package.mjs",
+    "demo": "npm run build && ng serve demo",
+    "demo:build": "npm run build && ng build demo --configuration production"
   },
   "private": true,
   "packageManager": "npm@12.0.2",

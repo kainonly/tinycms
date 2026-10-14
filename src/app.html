@@ -1,0 +1,66 @@
+<main class="page">
+  <h1>ngx-wangeditor-next 示例</h1>
+  <p class="intro">
+    Angular 22 zoneless 富文本编辑器组件示例，演示表单绑定、图片与视频上传、工具栏配置和主题设置。
+  </p>
+
+  <section class="panel">
+    <div class="controls">
+      <div class="group">
+        <span>模式</span>
+        <button type="button" [class.active]="mode() === 'default'" (click)="switchMode('default')">
+          default
+        </button>
+        <button type="button" [class.active]="mode() === 'simple'" (click)="switchMode('simple')">
+          simple
+        </button>
+      </div>
+      <div class="group">
+        <button type="button" (click)="resetContent()">重置内容</button>
+        <button type="button" [disabled]="pending() > 0" (click)="toggleDisabled()">
+          {{ disabled() ? '启用编辑器' : '禁用编辑器' }}
+        </button>
+        @if (pending() > 0) {
+          <span class="pending">上传中 {{ pending() }} 个任务…</span>
+        }
+      </div>
+    </div>
+
+    @for (key of [renderKey()]; track key) {
+      <ngx-wangeditor-next
+        [formControl]="content"
+        [mode]="mode()"
+        [editorConfig]="editorConfig"
+        [toolbarConfig]="toolbarConfig"
+        [upload]="upload"
+        (created)="log('编辑器初始化完成')"
+        (htmlChange)="updatePreview($event)"
+        (blurred)="log('编辑器失焦')"
+        (uploadError)="onUploadError($event)"
+        (editorError)="onEditorError($event)"
+        (pendingChange)="pending.set($event)"
+      />
+    }
+    @if (errorMessage()) {
+      <p class="error">{{ errorMessage() }}</p>
+    }
+  </section>
+
+  <section class="panel">
+    <h2>表单值（HTML）</h2>
+    <pre>{{ htmlPreview() || content.value }}</pre>
+  </section>
+
+  <section class="panel">
+    <h2>事件日志</h2>
+    @if (logs().length) {
+      <ul class="logs">
+        @for (entry of logs(); track $index) {
+          <li>{{ entry }}</li>
+        }
+      </ul>
+    } @else {
+      <p class="muted">暂无事件</p>
+    }
+  </section>
+</main>

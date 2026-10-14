@@ -12,5 +12,22 @@
   },
   "sideEffects": false,
   "description": "Angular standalone adapter for wangEditor-next",
-  "license": "MIT"
+  "license": "MIT",
+  "author": "kainonly",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kainonly/ngx-wangeditor-next.git"
+  },
+  "homepage": "https://github.com/kainonly/ngx-wangeditor-next#readme",
+  "bugs": {
+    "url": "https://github.com/kainonly/ngx-wangeditor-next/issues"
+  },
+  "keywords": [
+    "angular",
+    "wangeditor",
+    "wangeditor-next",
+    "rich-text",
+    "editor",
+    "zoneless"
+  ]
 }

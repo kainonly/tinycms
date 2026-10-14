@@ -4,10 +4,10 @@
 
 ## 安装
 
-安装打包后的 npm 文件及编辑器依赖：
+本库与 Angular **大版本**保持一致即可使用（peerDependencies 为 `^22.2.0`，适配 Angular `22.x` 全系）。版本号的 `major.minor` 跟随构建时的 Angular 版本，例如 `22.2.0` 基于 Angular `22.2` 构建。安装组件与编辑器依赖：
 
 ```sh
-npm install /path/to/ngx-wangeditor-next-0.1.0.tgz @wangeditor-next/editor
+npm install ngx-wangeditor-next @wangeditor-next/editor
 ```
 
 在应用的全局样式中引入：
@@ -15,6 +15,19 @@ npm install /path/to/ngx-wangeditor-next-0.1.0.tgz @wangeditor-next/editor
 ```css
 @import '@wangeditor-next/editor/dist/css/style.css';
 ```
+
+## 运行示例
+
+仓库根目录的 `src/` 是一个完整的示例应用，演示表单绑定、图片与视频上传（纯前端 dataURL 模拟，无需后端）、模式切换、事件日志与主题设置：
+
+```sh
+git clone https://github.com/kainonly/ngx-wangeditor-next.git
+cd ngx-wangeditor-next
+npm install
+npm run demo
+```
+
+打开 <http://localhost:4200> 查看效果。示例通过 `tsconfig.json` 的路径映射消费 `dist/editor` 中的构建产物，`npm run demo` 会先构建库再启动开发服务器。
 
 ## 表单绑定
 
