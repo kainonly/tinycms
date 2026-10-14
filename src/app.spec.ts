@@ -71,6 +71,9 @@ describe('App', () => {
     const logs = fixture.nativeElement.querySelectorAll('.logs li');
     expect(logs.length).toBe(1);
     expect(logs[0].textContent).toContain('编辑器初始化完成');
+    expect(fixture.nativeElement.querySelector('.upload-mode')?.textContent).toContain(
+      'dataURL 模拟',
+    );
   });
 
   it('切换模式销毁旧实例并按新模式重建', async () => {

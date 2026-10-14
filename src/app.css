@@ -80,6 +80,11 @@ button:disabled {
   color: #1677ff;
 }
 
+.upload-mode {
+  color: #666;
+  font-size: 13px;
+}
+
 .error {
   margin: 8px 0 0;
   color: #ff4d4f;

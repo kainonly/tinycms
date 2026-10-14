@@ -1,6 +1,6 @@
 {
   "name": "ngx-wangeditor-next",
-  "version": "22.2.0",
+  "version": "22.2.1",
   "scripts": {
     "build": "ng build editor --configuration production",
     "watch": "ng build editor --watch --configuration development",
@@ -21,9 +21,9 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
+    "@wangeditor-next/editor": "^6.5.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "@wangeditor-next/editor": "^6.5.0"
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@angular/build": "^22.2.2",

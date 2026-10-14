@@ -16,6 +16,10 @@
         </button>
       </div>
       <div class="group">
+        <span>上传</span>
+        <span class="upload-mode">{{ uploadMode }}</span>
+      </div>
+      <div class="group">
         <button type="button" (click)="resetContent()">重置内容</button>
         <button type="button" [disabled]="pending() > 0" (click)="toggleDisabled()">
           {{ disabled() ? '启用编辑器' : '禁用编辑器' }}
@@ -38,7 +42,7 @@
         (blurred)="log('编辑器失焦')"
         (uploadError)="onUploadError($event)"
         (editorError)="onEditorError($event)"
-        (pendingChange)="pending.set($event)"
+        (pendingChange)="onPendingChange($event)"
       />
     }
     @if (errorMessage()) {
