@@ -2,6 +2,10 @@
 
 基于 wangeditor-next 的 Angular 富文本编辑器组件，无需 zone.js（zoneless），支持表单绑定、图片与视频上传、工具栏配置和主题设置。
 
+## SSR 兼容
+
+组件本身不面向 SSR，但消费方应用启用 SSR 或预渲染（`@angular/ssr`）时无需额外处理：服务端只渲染工具栏与编辑区的占位结构，编辑器引擎通过动态 `import` 仅在浏览器端加载，不会在服务端执行，也不会产生报错；编辑器在客户端水合完成后初始化。库内置真实服务端渲染的回归测试（`editor.ssr.spec.ts`）保障这一行为。
+
 ## 安装
 
 本库与 Angular **大版本**保持一致即可使用（peerDependencies 为 `^22.2.0`，适配 Angular `22.x` 全系）。版本号的 `major.minor` 跟随构建时的 Angular 版本，例如 `22.2.0` 基于 Angular `22.2` 构建。安装组件与编辑器依赖：
